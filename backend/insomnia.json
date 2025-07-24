@@ -10,7 +10,7 @@
       "modified": 1721822400000,
       "created": 1721822400000,
       "name": "🏛️ NusaScan API - Indonesian Heritage",
-      "description": "Real-time AI API for Indonesian cultural heritage analysis\nBuilt with Mastra.ai, OpenAI, and HuggingFace\n\nTesting with: /backend/testing/image.png",
+      "description": "Complete AI API suite for Indonesian cultural heritage\n\n🔍 SCAN API: Real-time image analysis with AI\n💬 CHAT API: Kala chatbot for cultural questions\n\nBuilt with Mastra.ai, OpenAI, and HuggingFace\nTesting with: /backend/testing/image.png",
       "scope": "collection",
       "_type": "workspace"
     },
@@ -40,7 +40,7 @@
       "parentId": "wrk_nusascan",
       "modified": 1721822400000,
       "created": 1721822400000,
-      "url": "{{ _.base_url }}/scan/health",
+      "url": "{{ _.base_url }}/api/scan/health",
       "name": "1. Health Check ✅",
       "description": "Check if NusaScan API server is running and healthy\n\nExpected Response:\n{\n  \"status\": \"healthy\",\n  \"service\": \"NusaScan API\",\n  \"version\": \"1.0.0\",\n  \"uptime\": 123456\n}",
       "method": "GET",
@@ -69,7 +69,7 @@
       "parentId": "wrk_nusascan",
       "modified": 1721822400000,
       "created": 1721822400000,
-      "url": "{{ _.base_url }}/scan/supported-types",
+      "url": "{{ _.base_url }}/api/scan/supported-types",
       "name": "2. Supported Types 📋",
       "description": "Get supported file formats and cultural categories\n\nExpected Response:\n{\n  \"supported_formats\": [\"image/jpeg\", \"image/png\", \"image/webp\"],\n  \"max_file_size\": \"10MB\",\n  \"cultural_categories\": [...]\n}",
       "method": "GET",
@@ -98,7 +98,7 @@
       "parentId": "wrk_nusascan",
       "modified": 1721822400000,
       "created": 1721822400000,
-      "url": "{{ _.base_url }}/scan",
+      "url": "{{ _.base_url }}/api/scan",
       "name": "3. Real-time Analysis 🔍 (8-15 seconds)",
       "description": "Upload image for real-time cultural heritage analysis\n\nProcess:\n1. Object Recognition (Vision AI)\n2. Text Extraction (OCR)\n3. Cultural Analysis\n4. Grounding Search\n\nTimeout: 15 seconds maximum\nFile: {{ _.test_image_path }}",
       "method": "POST",
@@ -139,7 +139,7 @@
       "parentId": "wrk_nusascan",
       "modified": 1721822400000,
       "created": 1721822400000,
-      "url": "{{ _.base_url }}/scan/stream",
+      "url": "{{ _.base_url }}/api/scan/stream",
       "name": "4. Streaming Analysis 📡 (Progress Updates)",
       "description": "Upload image for streaming analysis with real-time progress updates\n\nStream Events:\n- initializing (0%)\n- vision_analysis (33%)\n- text_extraction (66%)\n- grounding_search (90%)\n- finished (100%)\n\nFile: {{ _.test_image_path }}",
       "method": "POST",
@@ -185,7 +185,7 @@
       "parentId": "wrk_nusascan",
       "modified": 1721822400000,
       "created": 1721822400000,
-      "url": "{{ _.base_url }}/scan",
+      "url": "{{ _.base_url }}/api/scan",
       "name": "5. Test Multiple Files 📁",
       "description": "Test with different cultural objects:\n- Batik patterns\n- Temple photos\n- Wayang puppets\n- Museum artifacts\n\nChange the file in Body > Form > image field",
       "method": "POST",
@@ -212,6 +212,253 @@
       ],
       "authentication": {},
       "metaSortKey": -1721822050000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "fld_chat",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "name": "💬 Kala Chat API",
+      "description": "Chatbot for Indonesian cultural heritage questions",
+      "environment": {},
+      "environmentPropertyOrder": null,
+      "metaSortKey": -1721822000000,
+      "_type": "request_group"
+    },
+    {
+      "_id": "req_chat_health",
+      "parentId": "fld_chat",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/api/chat/health",
+      "name": "Chat Health Check ✅",
+      "description": "Check if Kala chatbot service is healthy",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721822000000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_chat_batik",
+      "parentId": "fld_chat",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/api/chat",
+      "name": "Ask About Batik 🎨",
+      "description": "Chat about Indonesian batik patterns and meanings",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"message\": \"Apa itu Batik Mega Mendung dan apa makna filosofisnya?\",\n  \"threadId\": \"batik-discussion\",\n  \"resourceId\": \"user_demo\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "id": "pair_02",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721821900000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_chat_keris",
+      "parentId": "fld_chat",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/api/chat",
+      "name": "Ask About Keris ⚔️",
+      "description": "Chat about traditional Indonesian keris",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"message\": \"Jelaskan tentang Keris Jangkung dan makna filosofisnya dalam budaya Jawa?\",\n  \"threadId\": \"keris-discussion\",\n  \"resourceId\": \"user_demo\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "id": "pair_02",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721821800000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_chat_candi",
+      "parentId": "fld_chat",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/api/chat",
+      "name": "Ask About Candi 🏛️",
+      "description": "Chat about Indonesian temples and architecture",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"message\": \"Ceritakan sejarah dan arsitektur Candi Borobudur, serta bagaimana cara pembangunannya?\",\n  \"threadId\": \"candi-discussion\",\n  \"resourceId\": \"user_demo\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "id": "pair_02",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721821700000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_chat_wayang",
+      "parentId": "fld_chat",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/api/chat",
+      "name": "Ask About Wayang 🎭",
+      "description": "Chat about traditional Indonesian wayang",
+      "method": "POST",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"message\": \"Apa perbedaan wayang kulit dan wayang golek? Dan bagaimana pertunjukan wayang berkembang?\",\n  \"threadId\": \"wayang-discussion\",\n  \"resourceId\": \"user_demo\"\n}"
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "id": "pair_02",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721821600000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_chat_history",
+      "parentId": "fld_chat",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/api/chat/history/batik-discussion",
+      "name": "Get Chat History 📚",
+      "description": "Retrieve chat history for a specific thread",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721821500000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_global_health",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/health",
+      "name": "🌍 Global Health Check",
+      "description": "Check overall system health for both scan and chat services",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721821400000,
       "isPrivate": false,
       "settingStoreCookies": true,
       "settingSendCookies": true,
