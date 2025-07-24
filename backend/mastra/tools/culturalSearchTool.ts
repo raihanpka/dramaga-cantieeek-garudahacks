@@ -1,260 +1,285 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
 
 export const culturalSearchTool = createTool({
-  id: "cultural-search-tool", 
-  description: "Search for cultural heritage information using OpenAI web search for Indonesian cultural objects",
+  id: "cultural-search",
+  description: "Search for Indonesian cultural information and artifacts",
   inputSchema: z.object({
-    objectType: z.string().describe("Type of cultural object (batik, keris, topeng, etc.)"),
-    specificName: z.string().optional().describe("Specific name or pattern if identified"),
-    region: z.string().optional().describe("Region or origin if known"),
-    keywords: z.array(z.string()).optional().describe("Additional search keywords")
+    query: z.string().describe("Search query about Indonesian culture"),
+    category: z.string().optional().describe("Category like batik, keris, candi, wayang")
   }),
   outputSchema: z.object({
     found: z.boolean(),
-    culturalInfo: z.object({
+    data: z.object({
       name: z.string(),
       description: z.string(),
       origin: z.string(),
-      historical_context: z.string(),
-      significance: z.string(),
-      related_artifacts: z.array(z.string())
+      cultural_significance: z.string(),
+      historical_context: z.string()
     }).optional(),
-    sources: z.array(z.string()).optional(),
-    searchQuery: z.string().describe("The search query used")
+    message: z.string()
   }),
-  execute: async ({ context: { objectType, specificName, region, keywords } }) => {
+  
+  execute: async ({ context }) => {
     try {
-      console.log('🔍 Cultural search for:', { objectType, specificName, region, keywords });
+      const { query, category } = context;
       
-      // Build comprehensive search query
-      let searchQuery = `${objectType} Indonesia cultural heritage traditional`;
+      console.log('🔍 Cultural search tool called with:', { query, category });
+
+      // Simple knowledge base for testing
+      const culturalData: { [key: string]: any } = {
+        "batik": {
+          name: "Batik Indonesia",
+          description: "Teknik pewarnaan kain dengan menggunakan lilin sebagai perintang warna",
+          origin: "Indonesia, terutama Jawa dan Bali",
+          cultural_significance: "Simbol identitas budaya Indonesia, diakui UNESCO sebagai Warisan Budaya Takbenda",
+          historical_context: "Berkembang sejak abad ke-6, dipengaruhi budaya Hindu-Buddha dan Islam"
+        },
+        "keris": {
+          name: "Keris",
+          description: "Senjata tradisional Indonesia yang berbentuk belati dengan lekukan khas",
+          origin: "Jawa, kemudian menyebar ke seluruh Nusantara",
+          cultural_significance: "Pusaka spiritual, simbol kekuatan dan perlindungan",
+          historical_context: "Berkembang sejak abad ke-9, setiap bentuk memiliki makna filosofis"
+        },
+        "candi": {
+          name: "Candi",
+          description: "Bangunan suci peninggalan masa Hindu-Buddha di Indonesia",
+          origin: "Tersebar di Jawa, Sumatra, dan wilayah Indonesia lainnya",
+          cultural_significance: "Pusat keagamaan dan simbol kemegahan peradaban masa lalu",
+          historical_context: "Dibangun antara abad ke-7 hingga ke-15, mencerminkan kejayaan kerajaan-kerajaan Nusantara"
+        },
+        "wayang": {
+          name: "Wayang",
+          description: "Seni pertunjukan tradisional Indonesia menggunakan boneka kulit atau kayu",
+          origin: "Jawa, kemudian berkembang ke berbagai daerah",
+          cultural_significance: "Media pendidikan moral dan spiritual, sarana dakwah",
+          historical_context: "Berkembang sejak abad ke-9, memadukan nilai-nilai Hindu, Buddha, dan Islam"
+        }
+      };
+
+      // Find matching cultural item
+      const queryLower = query.toLowerCase();
+      let matchedData = null;
       
-      if (specificName) {
-        searchQuery += ` ${specificName}`;
+      for (const [key, data] of Object.entries(culturalData)) {
+        if (queryLower.includes(key) || (category && category.toLowerCase().includes(key))) {
+          matchedData = data;
+          break;
+        }
       }
-      
-      if (region) {
-        searchQuery += ` ${region}`;
-      }
-      
-      if (keywords && keywords.length > 0) {
-        searchQuery += ` ${keywords.join(' ')}`;
-      }
-      
-      searchQuery += ` history significance meaning philosophy`;
 
-      console.log('🌐 Searching web for:', searchQuery);
-
-      // Use OpenAI without web search (simplified)
-      const result = await generateText({
-        model: openai('gpt-4o-mini'),
-        prompt: `Sebagai ahli budaya Indonesia, berikan informasi lengkap tentang "${searchQuery}".
-
-Berikan informasi detail tentang objek budaya Indonesia ini meliputi:
-1. Nama dan jenis spesifik
-2. Deskripsi detail dan karakteristik
-3. Daerah/asal di Indonesia
-4. Konteks sejarah dan periode waktu
-5. Makna budaya dan signifikansi
-6. Artefak terkait atau objek serupa
-
-Fokus pada warisan budaya Indonesia, seni tradisional, dan konteks sejarah.
-Berikan informasi akurat dan edukatif yang sesuai untuk pelestarian budaya.
-
-Format response dalam bahasa Indonesia yang informatif dan komprehensif.`,
-        maxTokens: 2000,
-        temperature: 0.5,
-      });
-
-      console.log('🤖 OpenAI cultural search result:', result);
-
-      // Extract cultural information from AI response
-      const responseText = result.text;
-      const sources = result.sources ? result.sources.map(source => source.url) : [];
-
-      // Parse the response to extract structured information
-      const culturalInfo = await parseCulturalResponse(responseText, objectType, specificName);
-
-      if (culturalInfo && responseText.length > 50) {
-        console.log('✅ Cultural information found via web search');
+      if (matchedData) {
         return {
           found: true,
-          culturalInfo,
-          sources: sources.slice(0, 5), // Limit to 5 sources
-          searchQuery
+          data: matchedData,
+          message: "Informasi budaya ditemukan"
         };
       }
 
-      // Fallback if search doesn't provide good results
-      console.log('⚠️ Using fallback cultural information');
-      return getFallbackInfo(objectType, specificName, searchQuery);
-      
+      // Generic response for unknown queries
+      return {
+        found: false,
+        message: `Informasi tentang "${query}" tidak ditemukan dalam database budaya lokal. Silakan coba kata kunci seperti: batik, keris, candi, atau wayang.`
+      };
+
     } catch (error) {
-      console.error('❌ Cultural search error:', error);
-      return getFallbackInfo(objectType, specificName, `${objectType} ${specificName || ''}`);
+      console.error('❌ Cultural search tool error:', error);
+      return {
+        found: false,
+        message: "Terjadi kesalahan saat mencari informasi budaya"
+      };
     }
+  }
+});// Bias-aware query construction
+function buildUnbiasedQuery(type: string, name?: string, region?: string, keywords?: string[]) {
+  const base = `${type} ${name || ''} Indonesia warisan budaya`;
+  
+  // Avoid leading questions
+  const neutralKeywords = [
+    "sejarah akurat", 
+    "berbagai sumber", 
+    "perspektif lokal", 
+    "evidence-based",
+    region ? `asal ${region}` : "seluruh nusantara"
+  ];
+  
+  const query = [base, ...neutralKeywords, ...(keywords || [])].join(' ');
+  
+  return query.replace(/\b(terbaik|terkenal|paling)\b/g, ''); // Remove superlatives
+}
+
+// Multi-perspective prompt generation
+function createResearchPrompt(query: string, perspectives: string[], region?: string) {
+  return `Lakukan penelitian budaya yang komprehensif dan netral:
+
+**OBJEK**: ${query}
+
+**PENDEKATAN MULTI-SUMBER**:
+${perspectives.map(p => `- ${p}`).join('\n')}
+
+**INSTRUKSI KHUSUS**:
+1. Sertakan perspektif berbeda (lokal, akademik, museum)
+2. Sebutkan sumber dan tingkat kepercayaan
+3. Catat perbedaan interpretasi antar ahli
+4. Hindari generalisasi berlebihan
+5. Sertakan konteks lokal spesifik
+
+**FORMAT OUTPUT**:
+{
+  "name": "nama spesifik",
+  "origin": {"region": "daerah", "sources": ["sumber1", "sumber2"], "confidence": 0.8},
+  "historical": {"period": "masa", "evidence": ["bukti1"], "alternatives": ["alternatif1"]},
+  "cultural": {
+    "meanings": [{"source": "komunitas", "interpretation": "makna"}, {"source": "akademisi", "interpretation": "makna lain"}],
+    "uses": [{"context": "upacara", "description": "fungsi"}, {"context": "sehari-hari", "description": "fungsi"}]
   },
-});
+  "artistic": {"elements": ["elemen1"], "techniques": ["teknik1"], "variations": ["variasi1"]}
+}`;
+}
 
-// Parse OpenAI response to extract structured cultural information
-async function parseCulturalResponse(responseText: string, objectType: string, specificName?: string) {
+// Helper to extract structured data from LLM output (basic JSON block extraction)
+function extractStructuredData(lines: string[]): any {
+  const jsonStart = lines.findIndex(line => line.trim().startsWith('{'));
+  const jsonEnd = lines.slice(jsonStart).findIndex(line => line.trim().endsWith('}'));
+  if (jsonStart === -1 || jsonEnd === -1) return {};
+  const jsonString = lines.slice(jsonStart, jsonStart + jsonEnd + 1).join('\n');
   try {
-    const name = specificName ? `${objectType} ${specificName}` : objectType;
-    
-    // Extract key information using patterns and keywords
-    const lines = responseText.split('\n').filter(line => line.trim());
-    
-    let description = "";
-    let origin = "Indonesia";
-    let historical_context = "";
-    let significance = "";
-    let related_artifacts: string[] = [];
-
-    // Look for structured information in the response
-    for (const line of lines) {
-      const lowerLine = line.toLowerCase();
-      
-      if (lowerLine.includes('description') || lowerLine.includes('characteristics')) {
-        description = extractSentenceFromLine(line) || description;
-      }
-      
-      if (lowerLine.includes('origin') || lowerLine.includes('region') || lowerLine.includes('from')) {
-        const originMatch = line.match(/(Jawa|Bali|Sumatra|Kalimantan|Sulawesi|Papua|Maluku|Nusa Tenggara|[A-Z][a-z]+)/);
-        if (originMatch && originMatch[1]) origin = originMatch[1];
-      }
-      
-      if (lowerLine.includes('history') || lowerLine.includes('period') || lowerLine.includes('era')) {
-        historical_context = extractSentenceFromLine(line) || historical_context;
-      }
-      
-      if (lowerLine.includes('significance') || lowerLine.includes('meaning') || lowerLine.includes('importance')) {
-        significance = extractSentenceFromLine(line) || significance;
-      }
-      
-      if (lowerLine.includes('related') || lowerLine.includes('similar') || lowerLine.includes('artifacts')) {
-        const artifacts = extractArtifacts(line);
-        related_artifacts.push(...artifacts);
-      }
-    }
-
-    // Use full response as description if none found
-    if (!description) {
-      description = responseText.length > 200 ? 
-        responseText.substring(0, 200) + "..." : responseText;
-    }
-
-    // Default values if not found
-    if (!historical_context) {
-      historical_context = `${objectType} memiliki sejarah panjang dalam budaya Indonesia`;
-    }
-    
-    if (!significance) {
-      significance = `${objectType} memiliki nilai budaya dan artistik yang tinggi`;
-    }
-
-    if (related_artifacts.length === 0) {
-      related_artifacts = [`${objectType} tradisional lainnya`, "kerajinan nusantara"];
-    }
-
-    return {
-      name,
-      description,
-      origin,
-      historical_context,
-      significance,
-      related_artifacts: related_artifacts.slice(0, 5) // Limit to 5
-    };
-
-  } catch (error) {
-    console.error('Error parsing cultural response:', error);
-    return null;
+    return JSON.parse(jsonString);
+  } catch {
+    return {};
   }
 }
 
-// Helper function to extract sentence from a line
-function extractSentenceFromLine(line: string): string {
-  // Remove common prefixes and clean up
-  return line
-    .replace(/^\d+\.\s*/, '') // Remove numbering
-    .replace(/^[-*]\s*/, '') // Remove bullet points
-    .replace(/^(Description|Origin|History|Significance):\s*/i, '') // Remove labels
-    .trim();
+// Sophisticated parsing with bias detection
+function parseUnbiasedResponse(text: string, type: string, name?: string, region?: string) {
+  try {
+    const lines = text.split('\n');
+    const data = extractStructuredData(lines);
+    
+    // Validate confidence based on source diversity
+    const sourceCount = data.sources?.length || 1;
+    const perspectiveCount = new Set(data.meanings?.map((m: any) => m.source)).size || 1;
+    
+    const overallConfidence = Math.min((sourceCount * 0.2 + perspectiveCount * 0.3), 1);
+    const biasScore = calculateBiasScore(data);
+    
+    return {
+      found: true,
+      data: {
+        name: data.name || `${type} ${name || ''}`,
+        origin: {
+          region: data.region || region || 'Indonesia',
+          sources: data.sources || ['Sumber budaya lokal'],
+          confidence: data.origin_confidence || 0.7
+        },
+        historical: {
+          period: data.period || 'Warisan budaya',
+          evidence: data.evidence || ['Tradisi lisan'],
+          alternatives: data.alternatives || []
+        },
+        cultural: {
+          meanings: data.meanings || [{ source: 'Komunitas', interpretation: 'Warisan budaya' }],
+          uses: data.uses || [{ context: 'Tradisional', description: 'Pelestarian budaya' }]
+        },
+        artistic: {
+          elements: data.elements || ['Motif tradisional'],
+          techniques: data.techniques || ['Teknik warisan'],
+          variations: data.variations || ['Variasi lokal']
+        }
+      },
+      sources: data.sources?.map((s: string) => ({ type: 'cultural_expert', url: s })) || [],
+      confidence: {
+        overall: overallConfidence,
+        bias_score: biasScore
+      }
+    };
+  } catch (error) {
+    return getUnbiasedFallback(type, name);
+  }
 }
 
-// Helper function to extract artifacts from text
-function extractArtifacts(text: string): string[] {
-  const artifacts: string[] = [];
-  const words = text.toLowerCase().split(/[,\s]+/);
+// Bias score calculation
+function calculateBiasScore(data: any): number {
+  let score = 0;
   
-  const culturalTerms = [
-    'batik', 'keris', 'wayang', 'gamelan', 'topeng', 'kain', 'songket', 
-    'tenun', 'gerabah', 'ukiran', 'patung', 'relief', 'lukisan', 'kaligrafi'
+  // Check for diverse perspectives
+  const sources = data.sources || [];
+  const localSources = sources.filter((s: string) => s.includes('lokal') || s.includes('komunitas')).length;
+  const academicSources = sources.filter((s: string) => s.includes('universitas') || s.includes('museum')).length;
+  
+  if (localSources > 0 && academicSources > 0) score -= 0.2; // Less biased
+  if (sources.length > 3) score -= 0.1; // Multiple sources
+  
+  // Check for balanced interpretations
+  const meanings = data.meanings || [];
+  const uniqueInterpretations = new Set(meanings.map((m: any) => m.interpretation)).size;
+  if (uniqueInterpretations > 1) score -= 0.1;
+  
+  return Math.max(0, score); // Ensure non-negative
+}
+
+// Dynamic perspective generation
+function generatePerspectives(type: string, region?: string, options?: any) {
+  const base = [
+    "Sebagai ahli warisan budaya setempat",
+    "Sebagai peneliti museum nasional"
   ];
   
-  culturalTerms.forEach(term => {
-    if (words.some(word => word.includes(term))) {
-      artifacts.push(term);
-    }
-  });
+  const regional = region ? [`Sebagai sejarawan ${region}`] : [];
+  const academic = ["Sebagai akademisi universitas ternama"];
   
-  return artifacts;
+  return [...base, ...regional, ...academic];
 }
 
-// Fallback information when web search fails
-function getFallbackInfo(objectType: string, specificName?: string, searchQuery?: string) {
-  const culturalData = getCulturalData(objectType);
-  const name = specificName ? `${objectType} ${specificName}` : objectType;
+// Enhanced fallback with source transparency
+function getUnbiasedFallback(type: string, name?: string) {
+  const fallbackData = getMinimalCulturalData(type, name);
   
   return {
     found: false,
-    culturalInfo: {
-      name,
-      description: culturalData.description,
-      origin: culturalData.origin,
-      historical_context: culturalData.historical_context,
-      significance: culturalData.significance,
-      related_artifacts: culturalData.related_artifacts
-    },
-    sources: ["Indonesian Heritage Society", "Kemdikbud", "Wikipedia", "Museum Nasional Indonesia"],
-    searchQuery: searchQuery || objectType
+    data: fallbackData,
+    sources: [{ type: "fallback", url: "sistem fallback budaya" }],
+    confidence: { overall: 0.5, bias_score: 0.3 }
   };
 }
 
-// Get basic cultural data for common Indonesian objects
-function getCulturalData(objectType: string) {
-  const culturalDatabase: Record<string, any> = {
+// Minimal unbiased fallback data
+function getMinimalCulturalData(type: string, name?: string) {
+  const data: { [key: string]: {
+    name: string;
+    origin: { region: string; sources: string[]; confidence: number; };
+    historical: { period: string; evidence: string[]; alternatives: string[]; };
+    cultural: { meanings: { source: string; interpretation: string; }[]; uses: { context: string; description: string; }[]; };
+    artistic: { elements: string[]; techniques: string[]; variations: string[]; };
+  } } = {
     batik: {
-      description: "Kain tradisional Indonesia dengan motif yang dibuat menggunakan teknik lilin (malam) dan pewarnaan",
-      origin: "Jawa",
-      historical_context: "Berkembang sejak abad ke-6, mencapai puncak pada era Majapahit",
-      significance: "Melambangkan status sosial, identitas budaya, dan filosofi kehidupan masyarakat Jawa",
-      related_artifacts: ["songket", "tenun", "lurik", "jumputan"]
-    },
-    keris: {
-      description: "Senjata pusaka tradisional dengan nilai spiritual dan magis yang tinggi",
-      origin: "Jawa",
-      historical_context: "Muncul pada abad ke-9, berkembang pesat di era Majapahit",
-      significance: "Simbol kehormatan, kekuatan spiritual, dan identitas kaum bangsawan",
-      related_artifacts: ["tombak", "badik", "rencong", "mandau"]
-    },
-    wayang: {
-      description: "Pertunjukan boneka tradisional yang menceritakan epos Ramayana dan Mahabharata",
-      origin: "Jawa",
-      historical_context: "Berkembang sejak abad ke-10, dipengaruhi budaya Hindu-Buddha",
-      significance: "Media pendidikan moral, hiburan, dan penyebaran nilai-nilai filosofis",
-      related_artifacts: ["topeng", "gamelan", "dalang", "kelir"]
-    },
-    default: {
-      description: "Objek budaya tradisional Indonesia dengan nilai sejarah dan artistik",
-      origin: "Indonesia",
-      historical_context: "Merupakan bagian dari warisan budaya nusantara",
-      significance: "Memiliki nilai budaya dan spiritual dalam masyarakat Indonesia",
-      related_artifacts: ["kerajinan tradisional", "seni budaya nusantara"]
+      name: name || "Batik Indonesia",
+      origin: { region: "Jawa (dengan variasi lokal)", sources: ["Warisan budaya"], confidence: 0.6 },
+      historical: { period: "Abad ke-6 - sekarang", evidence: ["Prasasti dan artefak"], alternatives: ["Perkembangan regional"] },
+      cultural: {
+        meanings: [
+          { source: "Komunitas pengrajin", interpretation: "Identitas dan status" },
+          { source: "Ahli budaya", interpretation: "Warisan filosofis" }
+        ],
+        uses: [
+          { context: "Upacara adat", description: "Pakaian formal" },
+          { context: "Kehidupan sehari-hari", description: "Identitas budaya" }
+        ]
+      },
+      artistic: {
+        elements: ["Motif geometris", "Simbol alam"],
+        techniques: ["Canting lilin", "Pewarnaan alami"],
+        variations: ["Regional patterns"]
+      }
     }
   };
-
-  return culturalDatabase[objectType.toLowerCase()] || culturalDatabase.default;
+  
+  return data[type] || {
+    name: type,
+    origin: { region: "Nusantara", sources: ["Tradisi lokal"], confidence: 0.5 },
+    historical: { period: "Warisan budaya", evidence: ["Tradisi lisan"], alternatives: [] },
+    cultural: { meanings: [], uses: [] },
+    artistic: { elements: [], techniques: [], variations: [] }
+  };
 }
