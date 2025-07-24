@@ -120,20 +120,20 @@ export const analyzeImage = async (imagePath: string) => {
 
     // 5. Combine results into expected schema
     const result = {
-      object_recognition: {
-        category: visionResult.category || "objek_budaya",
-        specific_type: visionResult.specific_type || "Objek budaya Indonesia",
-        confidence: visionResult.confidence || 0.7,
-        cultural_significance: visionResult.description || "Objek dengan nilai budaya Indonesia"
-      },
       text_extraction: {
-        extracted_text: ocrResult.text || "Tidak ada teks terdeteksi",
+        extracted_text: ocrResult.text || "",
         metadata: {
           museum_name: extractMuseumName(ocrResult.text || ""),
           location: extractLocation(ocrResult.text || ""),
           year: extractYear(ocrResult.text || ""),
           additional_info: ocrResult.confidence ? `OCR confidence: ${ocrResult.confidence}` : undefined
         }
+      },
+      object_recognition: {
+        category: visionResult.category || "objek_budaya",
+        specific_type: visionResult.specific_type || "Objek budaya Indonesia",
+        confidence: visionResult.confidence || 0.7,
+        cultural_significance: visionResult.description || "Objek dengan nilai budaya Indonesia"
       },
       cultural_analysis: culturalAnalysis,
     };

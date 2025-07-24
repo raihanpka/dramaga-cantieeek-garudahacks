@@ -239,14 +239,14 @@ export default function CameraScreen() {
             style={GlobalStyles.camera} 
             facing={facing}
             ref={cameraRef}
-          >
-            <CameraControls
-              photos={photos}
-              onTakePicture={takePicture}
-              onFinishTakingPhotos={finishTakingPhotos}
-              onPickImages={pickImages}
-            />
-          </CameraView>
+          />
+          {/* Camera Controls Overlay */}
+          <CameraControls
+            photos={photos}
+            onTakePicture={takePicture}
+            onFinishTakingPhotos={finishTakingPhotos}
+            onPickImages={pickImages}
+          />
         </View>
       </SafeAreaView>
     </>
