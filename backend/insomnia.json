@@ -1,0 +1,234 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-07-24T15:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v8.6.1",
+  "resources": [
+    {
+      "_id": "wrk_nusascan",
+      "parentId": null,
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "name": "🏛️ NusaScan API - Indonesian Heritage",
+      "description": "Real-time AI API for Indonesian cultural heritage analysis\nBuilt with Mastra.ai, OpenAI, and HuggingFace\n\nTesting with: /backend/testing/image.png",
+      "scope": "collection",
+      "_type": "workspace"
+    },
+    {
+      "_id": "env_base",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:3000",
+        "test_image_path": "/Users/raihanpk/Documents/GitHub/dramaga-cantieeek-garudahacks/backend/testing/image.png"
+      },
+      "dataPropertyOrder": {
+        "&": [
+          "base_url",
+          "test_image_path"
+        ]
+      },
+      "color": "#4CAF50",
+      "isPrivate": false,
+      "metaSortKey": 1721822400000,
+      "_type": "environment"
+    },
+    {
+      "_id": "req_health",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/scan/health",
+      "name": "1. Health Check ✅",
+      "description": "Check if NusaScan API server is running and healthy\n\nExpected Response:\n{\n  \"status\": \"healthy\",\n  \"service\": \"NusaScan API\",\n  \"version\": \"1.0.0\",\n  \"uptime\": 123456\n}",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721822400000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_types",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/scan/supported-types",
+      "name": "2. Supported Types 📋",
+      "description": "Get supported file formats and cultural categories\n\nExpected Response:\n{\n  \"supported_formats\": [\"image/jpeg\", \"image/png\", \"image/webp\"],\n  \"max_file_size\": \"10MB\",\n  \"cultural_categories\": [...]\n}",
+      "method": "GET",
+      "body": {},
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721822300000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_analysis",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/scan",
+      "name": "3. Real-time Analysis 🔍 (8-15 seconds)",
+      "description": "Upload image for real-time cultural heritage analysis\n\nProcess:\n1. Object Recognition (Vision AI)\n2. Text Extraction (OCR)\n3. Cultural Analysis\n4. Grounding Search\n\nTimeout: 15 seconds maximum\nFile: {{ _.test_image_path }}",
+      "method": "POST",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_image",
+            "name": "image",
+            "value": "",
+            "description": "Cultural heritage image (PNG, JPG, WebP, max 10MB)",
+            "type": "file",
+            "fileName": "{{ _.test_image_path }}"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721822200000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_stream",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/scan/stream",
+      "name": "4. Streaming Analysis 📡 (Progress Updates)",
+      "description": "Upload image for streaming analysis with real-time progress updates\n\nStream Events:\n- initializing (0%)\n- vision_analysis (33%)\n- text_extraction (66%)\n- grounding_search (90%)\n- finished (100%)\n\nFile: {{ _.test_image_path }}",
+      "method": "POST",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_image",
+            "name": "image",
+            "value": "",
+            "description": "Cultural heritage image (PNG, JPG, WebP, max 10MB)",
+            "type": "file",
+            "fileName": "{{ _.test_image_path }}"
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Accept",
+          "value": "text/event-stream"
+        },
+        {
+          "id": "pair_02",
+          "name": "Cache-Control",
+          "value": "no-cache"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721822100000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "req_test_batch",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "url": "{{ _.base_url }}/scan",
+      "name": "5. Test Multiple Files 📁",
+      "description": "Test with different cultural objects:\n- Batik patterns\n- Temple photos\n- Wayang puppets\n- Museum artifacts\n\nChange the file in Body > Form > image field",
+      "method": "POST",
+      "body": {
+        "mimeType": "multipart/form-data",
+        "params": [
+          {
+            "id": "pair_image",
+            "name": "image",
+            "value": "",
+            "description": "Upload different cultural objects to test various categories",
+            "type": "file",
+            "fileName": ""
+          }
+        ]
+      },
+      "parameters": [],
+      "headers": [
+        {
+          "id": "pair_01",
+          "name": "Accept",
+          "value": "application/json"
+        }
+      ],
+      "authentication": {},
+      "metaSortKey": -1721822050000,
+      "isPrivate": false,
+      "settingStoreCookies": true,
+      "settingSendCookies": true,
+      "settingDisableRenderRequestBody": false,
+      "settingEncodeUrl": true,
+      "settingRebuildPath": true,
+      "settingFollowRedirects": "global",
+      "_type": "request"
+    },
+    {
+      "_id": "jar_cookies",
+      "parentId": "wrk_nusascan",
+      "modified": 1721822400000,
+      "created": 1721822400000,
+      "name": "Default Jar",
+      "cookies": [],
+      "_type": "cookie_jar"
+    }
+  ]
+}

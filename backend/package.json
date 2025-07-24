@@ -1,0 +1,39 @@
+{
+  "name": "nusascan-backend",
+  "version": "1.0.0",
+  "description": "Real-time AI system for Indonesian cultural heritage analysis",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun run index.ts",
+    "start": "NODE_ENV=production bun run index.ts",
+    "build": "bun build index.ts --outdir ./dist --target node",
+    "test": "bun run test-realtime.ts",
+    "start-realtime": "bun run start-realtime.ts",
+    "monitor": "bun run start-realtime.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
+    "tsx": "^4.20.3"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@ai-sdk/google-vertex": "^2.2.27",
+    "@ai-sdk/openai": "^1.3.23",
+    "@mastra/core": "^0.11.1",
+    "axios": "^1.11.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "mastra": "^0.10.15",
+    "multer": "^2.0.2",
+    "openai": "^5.10.2",
+    "tesseract.js": "^6.0.1"
+  }
+}
