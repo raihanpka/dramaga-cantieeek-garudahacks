@@ -28,7 +28,7 @@ export const GlobalStyles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   overlayHeader: {
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 1)',
     paddingVertical: 12,
     paddingHorizontal: 16,
     flexDirection: 'row',
@@ -38,6 +38,7 @@ export const GlobalStyles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
+    height: 100,
     zIndex: 1,
   },
   headerTitle: {
@@ -100,6 +101,7 @@ export const GlobalStyles = StyleSheet.create({
   // Camera Specific Styles
   camera: {
     flex: 1,
+    aspectRatio: 3/4, // Match standard camera aspect ratio
   },
   cameraButtonContainer: {
     flex: 1,
@@ -108,6 +110,22 @@ export const GlobalStyles = StyleSheet.create({
     margin: 64,
     alignItems: 'flex-end',
     justifyContent: 'space-between',
+  },
+  customCameraButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 0,
+    height: 175,
+    backgroundColor: 'rgba(0, 0, 0, 1)',
+    borderRadius: 25,
+    marginHorizontal: 100,
+    gap: 55, // Add gap between buttons instead of space-around
   },
   flipButton: {
     width: 60,
@@ -121,19 +139,27 @@ export const GlobalStyles = StyleSheet.create({
     fontSize: 24,
   },
   captureButton: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 90,
+    height: 90,
+    borderRadius: 45,
     backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 4,
-    borderColor: 'rgba(255, 255, 255, 0.5)',
+    borderWidth: 6,
+    borderColor: 'rgba(255, 123, 0, 0.8)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   captureButtonInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: 'white',
   },
 
@@ -142,11 +168,13 @@ export const GlobalStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: 'black',
   },
   photo: {
     width: '100%',
     height: '100%',
-    resizeMode: 'contain',
+    resizeMode: 'contain', // This ensures the full photo is visible without cropping
+    aspectRatio: 3/4, // Match the camera aspect ratio
   },
   actionButtons: {
     flexDirection: 'row',

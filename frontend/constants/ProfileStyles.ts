@@ -1,0 +1,215 @@
+import { StyleSheet } from 'react-native';
+import { Colors } from './Colors';
+
+export const ProfileStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  header: {
+    backgroundColor: Colors.light.tint,
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 4,
+    borderColor: 'white',
+  },
+  username: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  joinDate: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 20,
+    paddingHorizontal: 20,
+  },
+  statCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 16,
+    alignItems: 'center',
+    minWidth: 100,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.light.tint,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  section: {
+    marginVertical: 10,
+    paddingHorizontal: 20,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  achievementCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  achievementUnlocked: {
+    borderColor: '#4CAF50',
+    backgroundColor: '#f8fff8',
+  },
+  achievementLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  achievementIcon: {
+    fontSize: 32,
+    marginRight: 16,
+  },
+  achievementIconLocked: {
+    opacity: 0.3,
+  },
+  achievementInfo: {
+    flex: 1,
+  },
+  achievementTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 2,
+  },
+  achievementDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
+  },
+  textMuted: {
+    opacity: 0.5,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  progressBar: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 3,
+    marginRight: 8,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: Colors.light.tint,
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 12,
+    color: '#666',
+    minWidth: 40,
+  },
+  unlockedBadge: {
+    fontSize: 24,
+    color: '#4CAF50',
+  },
+  viewAllButton: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 16,
+    marginTop: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  viewAllText: {
+    fontSize: 16,
+    color: Colors.light.tint,
+    fontWeight: '600',
+  },
+  settingItem: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 16,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  settingText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  settingArrow: {
+    fontSize: 18,
+    color: '#999',
+  },
+  versionContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 40,
+  },
+  versionText: {
+    fontSize: 14,
+    color: '#999',
+  },
+});

@@ -1,110 +1,245 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  ScrollView, 
+  TouchableOpacity, 
+  Image
+} from 'react-native';
+import { router } from 'expo-router';
+import { Colors } from '@/constants/Colors';
+import { ProfileStyles } from '@/constants/ProfileStyles';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Explore</ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image source={require('@/assets/images/react-logo.png')} style={{ alignSelf: 'center' }} />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Custom fonts">
-        <ThemedText>
-          Open <ThemedText type="defaultSemiBold">app/_layout.tsx</ThemedText> to see how to load{' '}
-          <ThemedText style={{ fontFamily: 'SpaceMono' }}>
-            custom fonts such as this one.
-          </ThemedText>
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/versions/latest/sdk/font">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful <ThemedText type="defaultSemiBold">react-native-reanimated</ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
-  );
+interface UserStats {
+  totalChats: number;
+  questionsAsked: number;
+  imagesShared: number;
+  joinDate: string;
 }
 
-const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
-  },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-});
+interface Achievement {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  unlocked: boolean;
+  requirement: number;
+  progress: number;
+}
+
+export default function ProfileScreen() {
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalChats: 0,
+    questionsAsked: 0,
+    imagesShared: 0,
+    joinDate: new Date().toLocaleDateString()
+  });
+
+  const [achievements, setAchievements] = useState<Achievement[]>([
+    {
+      id: '1',
+      title: 'First Chat',
+      description: 'Started your first conversation with Kala',
+      icon: '💬',
+      unlocked: false,
+      requirement: 1,
+      progress: 0
+    },
+    {
+      id: '2',
+      title: 'Curious Explorer',
+      description: 'Asked 10 questions',
+      icon: '🔍',
+      unlocked: false,
+      requirement: 10,
+      progress: 0
+    },
+    {
+      id: '3',
+      title: 'Photo Enthusiast',
+      description: 'Shared 5 images with Kala',
+      icon: '📸',
+      unlocked: false,
+      requirement: 5,
+      progress: 0
+    },
+    {
+      id: '4',
+      title: 'Streak Master',
+      description: 'Maintain a 7-day chat streak',
+      icon: '🔥',
+      unlocked: false,
+      requirement: 7,
+      progress: 0
+    },
+    {
+      id: '5',
+      title: 'Nature Expert',
+      description: 'Had 25 conversations with Kala',
+      icon: '🌿',
+      unlocked: false,
+      requirement: 25,
+      progress: 0
+    }
+  ]);
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      const stats = await AsyncStorage.getItem('user_stats');
+      if (stats) {
+        setUserStats(JSON.parse(stats));
+      }
+      
+      const achievementsData = await AsyncStorage.getItem('user_achievements');
+      if (achievementsData) {
+        setAchievements(JSON.parse(achievementsData));
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
+    }
+  };
+
+  const getProgressPercentage = (progress: number, requirement: number) => {
+    return Math.min((progress / requirement) * 100, 100);
+  };
+
+  return (
+    <ScrollView style={ProfileStyles.container} showsVerticalScrollIndicator={false}>
+      {/* Header */}
+      <View style={ProfileStyles.header}>
+        <View style={ProfileStyles.avatarContainer}>
+          <Image 
+            source={require('@/assets/images/kala-avatar-lg.png')} 
+            style={ProfileStyles.avatar}
+          />
+        </View>
+        <Text style={ProfileStyles.username}>Nature Explorer</Text>
+        <Text style={ProfileStyles.joinDate}>Member since {userStats.joinDate}</Text>
+      </View>
+
+      {/* Stats Cards */}
+      <View style={ProfileStyles.statsContainer}>
+        <View style={ProfileStyles.statCard}>
+          <Text style={ProfileStyles.statNumber}>{userStats.totalChats}</Text>
+          <Text style={ProfileStyles.statLabel}>Conversations</Text>
+        </View>
+        <View style={ProfileStyles.statCard}>
+          <Text style={ProfileStyles.statNumber}>{userStats.questionsAsked}</Text>
+          <Text style={ProfileStyles.statLabel}>Questions</Text>
+        </View>
+        <View style={ProfileStyles.statCard}>
+          <Text style={ProfileStyles.statNumber}>{userStats.imagesShared}</Text>
+          <Text style={ProfileStyles.statLabel}>Images Shared</Text>
+        </View>
+      </View>
+
+      {/* Achievements Section */}
+      <View style={ProfileStyles.section}>
+        <Text style={ProfileStyles.sectionTitle}>🏆 Achievements</Text>
+        
+        {achievements.slice(0, 3).map((achievement) => (
+          <View key={achievement.id} style={[
+            ProfileStyles.achievementCard,
+            achievement.unlocked && ProfileStyles.achievementUnlocked
+          ]}>
+            <View style={ProfileStyles.achievementLeft}>
+              <Text style={[
+                ProfileStyles.achievementIcon,
+                !achievement.unlocked && ProfileStyles.achievementIconLocked
+              ]}>
+                {achievement.icon}
+              </Text>
+              <View style={ProfileStyles.achievementInfo}>
+                <Text style={[
+                  ProfileStyles.achievementTitle,
+                  !achievement.unlocked && ProfileStyles.textMuted
+                ]}>
+                  {achievement.title}
+                </Text>
+                <Text style={[
+                  ProfileStyles.achievementDescription,
+                  !achievement.unlocked && ProfileStyles.textMuted
+                ]}>
+                  {achievement.description}
+                </Text>
+                {!achievement.unlocked && (
+                  <View style={ProfileStyles.progressContainer}>
+                    <View style={ProfileStyles.progressBar}>
+                      <View style={[
+                        ProfileStyles.progressFill,
+                        { width: `${getProgressPercentage(achievement.progress, achievement.requirement)}%` }
+                      ]} />
+                    </View>
+                    <Text style={ProfileStyles.progressText}>
+                      {achievement.progress}/{achievement.requirement}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+            {achievement.unlocked && (
+              <Text style={ProfileStyles.unlockedBadge}>✓</Text>
+            )}
+          </View>
+        ))}
+        
+        <TouchableOpacity 
+          style={ProfileStyles.viewAllButton}
+          onPress={() => router.push('/profile/achievements')}
+        >
+          <Text style={ProfileStyles.viewAllText}>View All Achievements</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Settings Section */}
+      <View style={ProfileStyles.section}>
+        <Text style={ProfileStyles.sectionTitle}>⚙️ Settings</Text>
+        
+        <TouchableOpacity style={ProfileStyles.settingItem}>
+          <Text style={ProfileStyles.settingText}>🔔 Notifications</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={ProfileStyles.settingItem}>
+          <Text style={ProfileStyles.settingText}>📱 Language</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={ProfileStyles.settingItem}>
+          <Text style={ProfileStyles.settingText}>🚪 Logout</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* About Section */}
+      <View style={ProfileStyles.section}>
+        <Text style={ProfileStyles.sectionTitle}>ℹ️ About</Text>
+        
+        <TouchableOpacity style={ProfileStyles.settingItem}>
+          <Text style={ProfileStyles.settingText}>📄 Privacy Policy</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={ProfileStyles.settingItem}>
+          <Text style={ProfileStyles.settingText}>📋 Terms of Service</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={ProfileStyles.settingItem}>
+          <Text style={ProfileStyles.settingText}>💌 Contact Support</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+        
+        <View style={ProfileStyles.versionContainer}>
+          <Text style={ProfileStyles.versionText}>Version 1.0.0</Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
