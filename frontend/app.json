@@ -1,21 +1,30 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "KalaNusa",
+    "slug": "kalanusa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "scheme": "kalanusa",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.garudahacks.kalanusa"
     },
     "android": {
+      "package": "com.garudahacks.kalanusa",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ],
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -46,6 +55,14 @@
         "expo-image-picker",
         {
           "photosPermission": "The app accesses your photos to let you share them with Kala."
+        }
+      ],
+      [
+        "expo-system-ui",
+        {
+          "statusBarStyle": "light",
+          "statusBarBackgroundColor": "#ffffff",
+          "navigationBarStyle": "light"
         }
       ]
     ],
