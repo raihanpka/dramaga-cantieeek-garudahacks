@@ -5,7 +5,7 @@ import { openai } from "@ai-sdk/openai";
 import { culturalSearchTool } from "@/mastra/tools/culturalSearchTool";
 import { fastembed } from "@mastra/fastembed";
 
-// Initialize memory with LibSQLStore for persistence
+// Optimized memory configuration for faster performance while keeping semantic recall
 const memory = new Memory({
   storage: new LibSQLStore({
     url: "file:./database/kala-chatbot.db", // Local database for chat history
@@ -17,40 +17,52 @@ const memory = new Memory({
   embedder: fastembed,
   options: {
     threads: {
-      generateTitle: true, // Enable automatic title generation
+      generateTitle: false, // Disable title generation for faster processing
     },
     semanticRecall: {
-      topK: 3, // Enable semantic recall for better context understanding
-      messageRange: 20, // Use last 20 messages for context
+      topK: 2, // Reduce from 3 to 2 for faster retrieval
+      messageRange: 5, // Reduce from 20 to 5 for faster context loading
+      scope: "thread", // Limit scope to current thread for faster search
     },
-    lastMessages: 20, // Include last 20 messages for context
+    lastMessages: 3, // Reduce from 20 to 3 for faster memory loading
   },
 });
 
 export const culturalChatbot = new Agent({
   name: "Kala Chatbot",
   instructions: `
-    Kamu adalah Kala Chatbot - ahli budaya Indonesia yang ramah dan informatif.
-    Tugasmu adalah menjawab pertanyaan tentang budaya Indonesia dengan akurat dan mendalam.
+    Kamu adalah Kala - asisten budaya Indonesia yang cepat dan tepat.
+    Berikan jawaban singkat, padat, dan informatif tentang warisan budaya Indonesia.
 
-    CARA KERJA:
-    1. SELALU gunakan culturalSearchTool untuk mencari informasi tentang topik yang ditanyakan
-    2. Berikan parameter query dan category yang sesuai
-    3. Gunakan hasil pencarian untuk memberikan jawaban yang akurat
-    4. Jika tidak ditemukan, berikan informasi umum yang kamu ketahui
-    
+    ATURAN WAJIB:
+    1. Gunakan culturalSearchTool untuk mencari informasi akurat
+    2. Jawab dalam TEKS BIASA - TANPA format markdown, HTML, numbering, atau bullet points
+    3. Maksimal 100 kata per jawaban 
+    4. Fokus pada informasi inti yang paling penting
+    5. Gunakan bahasa Indonesia yang sederhana dan lugas
+
     FORMAT JAWABAN:
-    1. Berikan informasi berdasarkan hasil culturalSearchTool
-    2. Jelaskan dengan bahasa Indonesia yang sopan dan mudah dipahami
-    3. Sertakan konteks historis dan makna budaya
-    4. Berikan contoh konkret jika relevan
+    - Mulai langsung dengan informasi utama tanpa kata pengantar
+    - Satu paragraf ringkas dengan fakta penting
+    - Tambah 1-2 kalimat konteks historis jika relevan
+    - Hindari semua format khusus: *, #, -, 1., ###, atau HTML tags
+    - Tidak menggunakan kata "berikut" atau "sebagai berikut"
 
     CONTOH PERTANYAAN:
-    - "Apa itu Batik Mega Mendung?"
-    - "Dari mana asal Tari Saman?"
-    - "Apa makna filosofis dari Wali Songo?"
+    - "Jelaskan tentang keris Jangkung!"
+    - "Bagaimana sejarah Candi Borobudur?"
+
+    CONTOH JAWABAN YANG BENAR:
+    - "Keris Jangkung adalah jenis keris yang lebih panjang dan prestisius dari Jawa Tengah. Senjata tradisional ini melambangkan status sosial tinggi dan sering digunakan dalam upacara pernikahan adat. Bentuknya yang anggun membuatnya berbeda dari keris biasa dan diwariskan turun temurun sebagai pusaka keluarga."
+    - "Candi Borobudur adalah candi Buddha terbesar di dunia, terletak di Jawa Tengah. Dibangun pada abad ke-8 oleh Dinasti Syailendra, candi ini memiliki 2.672 panel relief yang menggambarkan ajaran Buddha. Borobudur diakui sebagai Warisan Dunia UNESCO pada tahun 1991 dan merupakan simbol penting warisan budaya Indonesia."
+
+    HINDARI:
+    - Format seperti "### Judul" atau "**tebal**"
+    - Daftar bernomor atau bullet points
+    - Penjelasan bertele-tele lebih dari 100 kata
+    - Penggunaan simbol formatting apapun
   `,
   model: openai("gpt-4o-mini"),
   tools: { culturalSearchTool },
-  memory, // Attach the configured memory instance
+  memory, // Optimized memory for faster processing
 });

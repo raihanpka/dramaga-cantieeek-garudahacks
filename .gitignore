@@ -135,6 +135,13 @@ test-*.ts
 *.backup
 *.bak
 
+# OCR Training Data Files
+*.traineddata
+
+# Testing files
+**/testing/test*.ts
+**/testing/test*.js
+
 # Package manager lock files (optional - uncomment if needed)
 # package-lock.json
 # yarn.lock
