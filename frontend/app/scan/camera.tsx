@@ -195,6 +195,10 @@ export default function CameraScreen() {
           message="Mengunggah Foto" 
           subMessage="Tunggu sebentar ya.." 
         />
+        <LoadingScreen 
+          message="Memproses foto..." 
+          subMessage="Kala lagi nyari tahu tentang ini dulu ya.." 
+        />
       </>
     );
   }

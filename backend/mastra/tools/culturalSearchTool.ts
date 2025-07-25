@@ -22,8 +22,10 @@ export const culturalSearchTool = createTool({
   
   execute: async ({ context }) => {
     try {
-      const { query, category } = context;
-      
+      let { query, category } = context;
+      // Pastikan tidak undefined
+      if (typeof query !== 'string') query = '';
+      if (typeof category !== 'string') category = '';
       console.log('🔍 Cultural search tool called with:', { query, category });
 
       // Simple knowledge base for testing
@@ -60,10 +62,10 @@ export const culturalSearchTool = createTool({
 
       // Find matching cultural item
       const queryLower = query.toLowerCase();
+      const categoryLower = category.toLowerCase();
       let matchedData = null;
-      
       for (const [key, data] of Object.entries(culturalData)) {
-        if (queryLower.includes(key) || (category && category.toLowerCase().includes(key))) {
+        if (queryLower.includes(key) || categoryLower.includes(key)) {
           matchedData = data;
           break;
         }
