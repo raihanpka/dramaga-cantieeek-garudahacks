@@ -1,29 +1,11 @@
 import { Agent } from "@mastra/core/agent";
-import { Memory } from "@mastra/memory";
-import { LibSQLVector } from "@mastra/libsql";
+// import { Memory } from "@mastra/memory";
+// import { LibSQLVector } from "@mastra/libsql";
 import { openai } from "@ai-sdk/openai";
 import { culturalSearchTool } from "../tools/culturalSearchTool.js";
-import { fastembed } from "@mastra/fastembed";
+// import { fastembed } from "@mastra/fastembed";
 
-// Optimized memory configuration for faster performance while keeping semantic recall
-const memory = new Memory({
-  vector: new LibSQLVector({
-    connectionUrl: process.env.TURSO_DB_URL || "",
-    authToken: process.env.TURSO_AUTH_TOKEN || ""
-  }),
-  embedder: fastembed,
-  options: {
-    threads: {
-      generateTitle: false, // Disable title generation for faster processing
-    },
-    semanticRecall: {
-      topK: 2, // Reduce from 3 to 2 for faster retrieval
-      messageRange: 5, // Reduce from 20 to 5 for faster context loading
-      scope: "thread", // Limit scope to current thread for faster search
-    },
-    lastMessages: 3, // Reduce from 20 to 3 for faster memory loading
-  },
-});
+
 
 export const culturalChatbot = new Agent({
   name: "Kala Chatbot",
@@ -61,5 +43,5 @@ export const culturalChatbot = new Agent({
   `,
   model: openai("gpt-4o-mini"),
   tools: { culturalSearchTool },
-  memory, // Optimized memory for faster processing
+  // memory removed
 });
