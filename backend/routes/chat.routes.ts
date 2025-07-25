@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { culturalChatbot } from "@/mastra/agents/kalaChatbot";
+import { culturalChatbot } from "../mastra/agents/kalaChatbot.js";
 
 const router = Router();
 
@@ -36,7 +36,7 @@ router.post("/", async (req, res) => {
     const processingTime = Date.now() - startTime;
 
     // Return chat response
-    res.json({
+    return res.json({
       success: true,
       data: {
         response: response.text,
@@ -54,7 +54,8 @@ router.post("/", async (req, res) => {
     
     const processingTime = Date.now() - startTime;
 
-    res.status(500).json({ 
+    
+    return res.status(500).json({ 
       success: false,
       error: "Gagal memproses chat",
       message: error instanceof Error ? error.message : "Unknown error occurred",
@@ -77,7 +78,7 @@ router.get("/history/:threadId", async (req, res) => {
     }
 
     // Get memory/history for the thread (simplified for now)
-    res.json({
+    return res.json({
       success: true,
       data: {
         threadId,
@@ -90,7 +91,7 @@ router.get("/history/:threadId", async (req, res) => {
   } catch (error) {
     console.error('Chat History Error:', error);
     
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       error: "Gagal mengambil riwayat chat",
       message: error instanceof Error ? error.message : "Unknown error occurred",

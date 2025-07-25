@@ -10,8 +10,7 @@ import {
   Platform,
   Image,
   Alert,
-  Modal,
-  Dimensions
+  Modal
 } from 'react-native';
 import { router, Stack } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -262,8 +261,16 @@ export default function ChatScreen() {
         <View style={ChatStyles.fullScreenHeader}>
           <TouchableOpacity 
             style={ChatStyles.backButton}
-            onPress={() => router.navigate('/')}
+            onPress={() => {
+              console.log('Back button pressed');
+              router.back();
+            }}
             activeOpacity={0.7}
+            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+            testID="chat-back-button"
+            accessible={true}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
           >
             <Image
               source={require('@/assets/images/backarrow-icon.png')}

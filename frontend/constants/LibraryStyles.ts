@@ -99,9 +99,6 @@ export const LibraryStyles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'white',
-    textShadowColor: 'rgba(0, 0, 0, 0.7)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
   },
   categoryBadge: {
     position: 'absolute',

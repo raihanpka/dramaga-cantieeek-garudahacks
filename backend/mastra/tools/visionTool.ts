@@ -23,7 +23,8 @@ export const visionTool = createTool({
     extracted_text: z.string().describe("Teks yang terdeteksi dalam gambar"),
     cultural_elements: z.array(z.string()).describe("Elemen budaya yang teridentifikasi"),
   }),
-  execute: async ({ context: { imagePath } }) => {
+  execute: async (context) => {
+    const imagePath = context.context.imagePath;
     try {
       console.log('🔍 Analyzing image with OpenAI Vision:', imagePath);
 

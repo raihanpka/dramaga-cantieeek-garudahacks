@@ -21,7 +21,7 @@
       "created": 1721822400000,
       "name": "Base Environment",
       "data": {
-        "base_url": "http://localhost:3000",
+        "base_url": "https://api-kalanusa.vercel.app",
         "test_image_path": "/Users/raihanpk/Documents/GitHub/dramaga-cantieeek-garudahacks/backend/testing/image.png"
       },
       "dataPropertyOrder": {

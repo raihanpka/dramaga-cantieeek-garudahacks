@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 
 import { join } from 'path';
 import { spawn } from 'child_process';
@@ -8,10 +8,14 @@ console.log('==================================================\n');
 
 // Start the main server
 console.log('📡 Starting Express server...');
-const server = spawn('bun', ['run', 'index.ts'], {
+const isProduction = process.env.NODE_ENV === 'production';
+const command = isProduction ? 'node' : 'tsx';
+const args = isProduction ? ['dist/server.js'] : ['server.ts'];
+
+const server = spawn(command, args, {
   cwd: process.cwd(),
   stdio: 'pipe',
-  env: { ...process.env, NODE_ENV: 'development' }
+  env: { ...process.env, NODE_ENV: process.env.NODE_ENV || 'development' }
 });
 
 let serverReady = false;
@@ -40,7 +44,7 @@ async function runPerformanceTests() {
   
   try {
     // Import and run the test
-    const { testRealtimeAPI } = await import('./test-realtime.ts');
+    const { testRealtimeAPI } = await import('./test-realtime.js');
     await testRealtimeAPI();
   } catch (error) {
     console.log('❌ Performance test failed:', error);

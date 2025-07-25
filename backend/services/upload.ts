@@ -1,9 +1,13 @@
-import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+
 import multer from "multer";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+if (process.env.VERCEL) {
+  throw new Error("File upload is not supported on Vercel. Please use cloud storage (Supabase/S3) for production uploads.");
+}
+
+// Use __dirname for CommonJS compatibility
+const __dirname = process.cwd();
 
 const storage = multer.diskStorage({
   destination: join(__dirname, "../../uploads"),

@@ -1,9 +1,9 @@
 import { Agent } from "@mastra/core/agent";
 import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
-import { visionTool } from "@/mastra/tools/visionTool";
-import { ocrTool } from "@/mastra/tools/ocrTool";
-import { culturalSearchTool } from "@/mastra/tools/culturalSearchTool";
+import { visionTool } from "../tools/visionTool.js";
+import { ocrTool } from "../tools/ocrTool.js";
+import { culturalSearchTool } from "../tools/culturalSearchTool.js";
 import OpenAI from "openai";
 
 const openaiClient = new OpenAI({
