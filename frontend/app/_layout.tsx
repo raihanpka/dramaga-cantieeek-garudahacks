@@ -18,17 +18,25 @@ export default function RootLayout() {
     return null;
   }
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="profile/achievements" options={{ headerShown: false }} />
-          <Stack.Screen name="profile/scriptures" options={{ headerShown: false }} />
-          <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </AuthProvider>
+  </AuthProvider>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="auth" options={{ headerShown: false }} />
+        <Stack.Screen name="library/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/achievements" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/scriptures" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/settings" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/notifications" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/language" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/privacy-policy" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/terms-of-service" options={{ headerShown: false }} />
+        <Stack.Screen name="profile/contact-support" options={{ headerShown: false }} />
+        <Stack.Screen name="auth-callback" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+      <StatusBar style="auto" />
+    </ThemeProvider>
+  </AuthProvider>
   );
 }

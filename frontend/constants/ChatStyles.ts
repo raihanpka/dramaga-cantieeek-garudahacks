@@ -15,8 +15,10 @@ export const ChatStyles = StyleSheet.create({
   fullScreenHeader: {
     backgroundColor: Colors.light.tint,
     paddingVertical: 12,
+    paddingTop: 40,
     paddingHorizontal: 16,
     flexDirection: 'row',
+    height: 100,
     alignItems: 'center',
     justifyContent: 'space-between',
     zIndex: 1000,

@@ -148,48 +148,81 @@ export default function ScripturesScreen() {
         <View style={styles.scripturesList}>
           {scannedScriptures.map((scripture) => {
             const statusInfo = getStatusDisplay(scripture.status);
+            const isClickable = scripture.status === 'certified' || scripture.status === 'approved';
+            
+            const handleScripturePress = () => {
+              if (isClickable) {
+                // Navigate to library detail page with the scripture ID
+                router.push({
+                  pathname: '/library/[id]',
+                  params: { id: scripture.id }
+                });
+              }
+            };
+
+            const ScriptureContent = (
+              <View style={ProfileStyles.scriptureMainContent}>
+                {scripture.thumbnailUri && (
+                  <Image 
+                    source={{ uri: scripture.thumbnailUri }} 
+                    style={ProfileStyles.scriptureThumbnail}
+                  />
+                )}
+                <View style={ProfileStyles.scriptureInfo}>
+                  <View style={ProfileStyles.scriptureHeader}>
+                    <Text style={ProfileStyles.scriptureTitle}>{scripture.title}</Text>
+                    <View style={[ProfileStyles.statusBadge, { backgroundColor: statusInfo.color }]}>
+                      <Text style={ProfileStyles.statusText}>{statusInfo.label}</Text>
+                    </View>
+                  </View>
+                  
+                  <Text style={ProfileStyles.scriptureDescription}>{scripture.description}</Text>
+                  <Text style={ProfileStyles.scriptureDate}>
+                    Photographed on {formatDate(scripture.submissionDate)}
+                  </Text>
+                  
+                  {scripture.progress < 100 && (
+                    <View style={ProfileStyles.progressContainer}>
+                      <View style={ProfileStyles.progressBar}>
+                        <View 
+                          style={[
+                            ProfileStyles.progressFill, 
+                            { 
+                              width: `${scripture.progress}%`,
+                              backgroundColor: statusInfo.color 
+                            }
+                          ]} 
+                        />
+                      </View>
+                      <Text style={ProfileStyles.progressText}>
+                        {scripture.progress}% complete
+                      </Text>
+                    </View>
+                  )}
+                  
+                  {/* Show clickable indicator for certified/approved scriptures */}
+                  {isClickable && (
+                    <View style={ProfileStyles.clickableIndicator}>
+                      <Text style={ProfileStyles.clickableText}>📖 Tap to view in library</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            );
+
             return (
               <View key={scripture.id} style={ProfileStyles.scriptureCard}>
-                <View style={ProfileStyles.scriptureMainContent}>
-                  {scripture.thumbnailUri && (
-                    <Image 
-                      source={{ uri: scripture.thumbnailUri }} 
-                      style={ProfileStyles.scriptureThumbnail}
-                    />
-                  )}
-                  <View style={ProfileStyles.scriptureInfo}>
-                    <View style={ProfileStyles.scriptureHeader}>
-                      <Text style={ProfileStyles.scriptureTitle}>{scripture.title}</Text>
-                      <View style={[ProfileStyles.statusBadge, { backgroundColor: statusInfo.color }]}>
-                        <Text style={ProfileStyles.statusText}>{statusInfo.label}</Text>
-                      </View>
-                    </View>
-                    
-                    <Text style={ProfileStyles.scriptureDescription}>{scripture.description}</Text>
-                    <Text style={ProfileStyles.scriptureDate}>
-                      Photographed on {formatDate(scripture.submissionDate)}
-                    </Text>
-                    
-                    {scripture.progress < 100 && (
-                      <View style={ProfileStyles.progressContainer}>
-                        <View style={ProfileStyles.progressBar}>
-                          <View 
-                            style={[
-                              ProfileStyles.progressFill, 
-                              { 
-                                width: `${scripture.progress}%`,
-                                backgroundColor: statusInfo.color 
-                              }
-                            ]} 
-                          />
-                        </View>
-                        <Text style={ProfileStyles.progressText}>
-                          {scripture.progress}% complete
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
+                {isClickable ? (
+                  <TouchableOpacity 
+                    onPress={handleScripturePress}
+                    style={ProfileStyles.clickableScripture}
+                    activeOpacity={0.7}
+                  >
+                    {ScriptureContent}
+                  </TouchableOpacity>
+                ) : (
+                  ScriptureContent
+                )}
               </View>
             );
           })}
