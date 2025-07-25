@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -12,18 +12,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router, useFocusEffect } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { ProfileStyles } from '@/constants/ProfileStyles';
+import { supabase } from '@/lib/supabase';
 
 interface ScannedScripture {
   id: string;
   title: string;
   description: string;
-  submissionDate: string;
-  status: 'processing' | 'transliterating' | 'reviewing' | 'approved' | 'certified' | 'rejected';
-  thumbnailUri?: string;
+  submission_date: string;
+  status: string;
   progress: number;
+  thumbnail_url?: string;
+  image_urls: string[];
+  analysis_result?: any;
 }
 
+
 export default function ScripturesScreen() {
+  const [userId, setUserId] = useState<string | null>(null);
   // Handle Android hardware back button
   useFocusEffect(
     useCallback(() => {
@@ -39,74 +44,47 @@ export default function ScripturesScreen() {
       return () => subscription.remove();
     }, [])
   );
-  const [scannedScriptures] = useState<ScannedScripture[]>([
-    {
-      id: '1',
-      title: 'Prasasti Candi Borobudur',
-      description: 'Photographed ancient stone inscription from Borobudur temple',
-      submissionDate: '2025-01-20',
-      status: 'certified',
-      progress: 100,
-      thumbnailUri: 'https://picsum.photos/seed/borobudur/200/150'
-    },
-    {
-      id: '2',
-      title: 'Naskah Lontar Bali',
-      description: 'Photographed traditional Balinese palm leaf manuscript',
-      submissionDate: '2025-01-22',
-      status: 'approved',
-      progress: 100,
-      thumbnailUri: 'https://picsum.photos/seed/lontar/200/150'
-    },
-    {
-      id: '3',
-      title: 'Batik Jawa Klasik',
-      description: 'Photographed traditional Javanese batik patterns with text',
-      submissionDate: '2025-01-24',
-      status: 'transliterating',
-      progress: 65,
-      thumbnailUri: 'https://picsum.photos/seed/batik/200/150'
-    },
-    {
-      id: '4',
-      title: 'Prasasti Sukuh',
-      description: 'Photographed stone inscription from Candi Sukuh',
-      submissionDate: '2025-01-25',
-      status: 'processing',
-      progress: 25,
-      thumbnailUri: 'https://picsum.photos/seed/sukuh/200/150'
-    },
-    {
-      id: '5',
-      title: 'Wayang Kulit Jawa',
-      description: 'Photographed traditional Javanese shadow puppet with inscriptions',
-      submissionDate: '2025-01-26',
-      status: 'reviewing',
-      progress: 80,
-      thumbnailUri: 'https://picsum.photos/seed/wayang/200/150'
-    },
-    {
-      id: '6',
-      title: 'Candi Prambanan Relief',
-      description: 'Photographed ancient relief carvings with Sanskrit inscriptions',
-      submissionDate: '2025-01-27',
-      status: 'approved',
-      progress: 100,
-      thumbnailUri: 'https://picsum.photos/seed/prambanan/200/150'
-    },
-    {
-      id: '7',
-      title: 'Kain Songket Palembang',
-      description: 'Photographed traditional Palembang songket with woven text patterns',
-      submissionDate: '2025-01-28',
-      status: 'certified',
-      progress: 100,
-      thumbnailUri: 'https://picsum.photos/seed/songket/200/150'
-    }
-  ]);
+  const [scannedScriptures, setScannedScriptures] = useState<ScannedScripture[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const getStatusDisplay = (status: ScannedScripture['status']) => {
-    const statusConfig = {
+  // Fetch userId from Supabase Auth on mount
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (data?.user?.id) {
+        setUserId(data.user.id);
+      } else {
+        setUserId(null);
+      }
+    };
+    getUserId();
+  }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+    const fetchScriptures = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data, error } = await supabase
+          .from('scanned_scriptures')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        setScannedScriptures(data || []);
+      } catch (err: any) {
+        setError(err.message || 'Failed to fetch data');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchScriptures();
+  }, [userId]);
+
+  const getStatusDisplay = (status: string) => {
+    const statusConfig: any = {
       processing: { label: 'Processing Photo', icon: '⏳', color: '#FF9500' },
       transliterating: { label: 'Transliterating', icon: '🔤', color: '#007AFF' },
       reviewing: { label: 'Expert Review', icon: '👁️', color: '#5856D6' },
@@ -114,7 +92,7 @@ export default function ScripturesScreen() {
       certified: { label: 'Certified', icon: '🏆', color: '#FFD700' },
       rejected: { label: 'Rejected', icon: '❌', color: '#FF3B30' }
     };
-    return statusConfig[status];
+    return statusConfig[status] || { label: status, icon: '', color: '#888' };
   };
 
   const formatDate = (dateString: string) => {
@@ -128,6 +106,8 @@ export default function ScripturesScreen() {
 
   return (
     <View style={styles.container}>
+      {loading && <Text style={{ textAlign: 'center', marginTop: 30 }}>Loading...</Text>}
+      {error && <Text style={{ color: 'red', textAlign: 'center', marginTop: 30 }}>{error}</Text>}
       {/* Header with SafeAreaView for top only */}
       <SafeAreaView edges={["top"]} style={{ backgroundColor: Colors.light.tint }}>
         <View style={styles.header}>
@@ -185,9 +165,9 @@ export default function ScripturesScreen() {
 
             const ScriptureContent = (
               <View style={ProfileStyles.scriptureMainContent}>
-                {scripture.thumbnailUri && (
+                {scripture.thumbnail_url && (
                   <Image 
-                    source={{ uri: scripture.thumbnailUri }} 
+                    source={{ uri: scripture.thumbnail_url }} 
                     style={ProfileStyles.scriptureThumbnail}
                   />
                 )}
@@ -201,7 +181,7 @@ export default function ScripturesScreen() {
                   
                   <Text style={ProfileStyles.scriptureDescription}>{scripture.description}</Text>
                   <Text style={ProfileStyles.scriptureDate}>
-                    Photographed on {formatDate(scripture.submissionDate)}
+                    Photographed on {formatDate(scripture.submission_date)}
                   </Text>
                   
                   {scripture.progress < 100 && (

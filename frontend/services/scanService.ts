@@ -3,7 +3,7 @@ import * as FileSystem from 'expo-file-system';
 import { supabase, ScannedScripture, ScanResult } from '@/lib/supabase';
 
 export class ScanService {
-  private static getApiUrl(): string {
+  static getApiUrl(): string {
     const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'https://api-kalanusa.vercel.app';
     return Platform.select({
       ios: baseUrl,
@@ -108,12 +108,19 @@ export class ScanService {
     try {
       // 1. Upload gambar ke Supabase Storage
       const uploadedUrls = await this.uploadImages(images, userId);
-      
       if (uploadedUrls.length === 0) {
         throw new Error('Failed to upload any images');
       }
 
-      // 2. Simpan data ke database Supabase
+      // 2. Panggil API scan untuk parsing
+      const scanResponse = await fetch(`${this.getApiUrl()}/api/scan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: uploadedUrls[0] }),
+      });
+      const scanResult = await scanResponse.json();
+
+      // 3. Simpan ke Supabase dengan hasil parsing
       const { data, error } = await supabase
         .from('scanned_scriptures')
         .insert({
@@ -121,8 +128,9 @@ export class ScanService {
           description,
           user_id: userId,
           image_urls: uploadedUrls,
-          status: 'processing',
-          progress: 0
+          status: scanResult.success ? 'approved' : 'rejected',
+          progress: scanResult.success ? 100 : 0,
+          analysis_result: scanResult.data
         })
         .select()
         .single();
@@ -131,13 +139,10 @@ export class ScanService {
         throw error;
       }
 
-      // 3. Proses di background dengan backend API
-      this.processInBackground(data.id, uploadedUrls);
-
       return {
         success: true,
         data: data,
-        message: 'Images uploaded successfully and processing started'
+        message: 'Images uploaded and analyzed successfully'
       };
     } catch (error) {
       console.error('Submit for analysis error:', error);
@@ -159,15 +164,11 @@ export class ScanService {
       // Process the first image for now (you can extend this to process all images)
       const imageUrl = imageUrls[0];
       console.log('Background analysis using imageUrl:', imageUrl);
-      // Convert image URL to FormData
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const formData = new FormData();
-      formData.append('image', blob, 'image.jpg');
-      // Call scan API
+      // Call scan API dengan body JSON { imageUrl }
       const scanResponse = await fetch(`${this.getApiUrl()}/api/scan`, {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl }),
       });
       const result: ScanResult = await scanResponse.json();
       
@@ -277,5 +278,25 @@ export class ScanService {
         }
       )
       .subscribe();
+  }
+}
+
+/**
+ * Test API scan with public image URL (tanpa upload manual)
+ */
+export async function testScanWithImageUrl(imageUrl: string) {
+  const apiUrl = ScanService.getApiUrl();
+  try {
+    const response = await fetch(`${apiUrl}/api/scan`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_urls: [imageUrl] })
+    });
+    if (!response.ok) throw new Error('API error: ' + response.status);
+    const result = await response.json();
+    return result;
+  } catch (err) {
+    console.error('Error testing scan API:', err);
+    throw err;
   }
 }

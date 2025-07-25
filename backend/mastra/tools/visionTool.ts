@@ -1,7 +1,9 @@
+
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import fs from "fs";
 import OpenAI from "openai";
+import fetch from "node-fetch";
 
 const openai = new OpenAI(
   {
@@ -28,9 +30,19 @@ export const visionTool = createTool({
     try {
       console.log('🔍 Analyzing image with OpenAI Vision:', imagePath);
 
-      // Read and encode image to base64
-      const base64Image = fs.readFileSync(imagePath, "base64");
-      const mimeType = imagePath.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg';
+
+      // Read and encode image to base64, support http(s) and local file
+      let base64Image: string;
+      let mimeType = imagePath.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg';
+      if (imagePath.startsWith('http')) {
+        const response = await fetch(imagePath);
+        if (!response.ok) throw new Error('Failed to fetch image: ' + response.status);
+        const buffer = await response.buffer();
+        base64Image = buffer.toString('base64');
+        // Optionally, detect mimeType from response.headers.get('content-type')
+      } else {
+        base64Image = fs.readFileSync(imagePath, "base64");
+      }
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
