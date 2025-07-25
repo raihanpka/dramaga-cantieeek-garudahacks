@@ -12,7 +12,8 @@ export const ocrTool = createTool({
     text: z.string(),
     confidence: z.number(),
   }),
-  execute: async ({ context: { imagePath } }) => {
+  execute: async (context) => {
+    const imagePath = context.context.imagePath;
     try {
       console.log('🔍 Extracting text from image:', imagePath);
       

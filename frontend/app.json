@@ -8,6 +8,12 @@
     "scheme": "kalanusa",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
+    "assetBundlePatterns": ["**/*"],
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.garudahacks.kalanusa"

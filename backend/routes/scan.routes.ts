@@ -1,22 +1,24 @@
 import { Router } from "express";
 import { unlinkSync } from "fs";
-import { upload } from "@/services/upload";
-import { analyzeImage, nusaScanSchema } from "@/mastra/agents/scanAgent";
+import { upload } from "../services/upload.js";
+import { analyzeImage, nusaScanSchema } from "../mastra/agents/scanAgent.js";
 
 const router = Router();
 
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", upload.array("images", 10), async (req, res) => {
   const startTime = Date.now();
   
   try {
-    if (!req.file) {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
       return res.status(400).json({ 
-        error: "No file uploaded",
-        message: "Please upload an image file" 
+        error: "No files uploaded",
+        message: "Please upload at least one image file" 
       });
     }
 
-    const imagePath = req.file.path;
+    // Process first image for analysis (can be extended to process all)
+    const firstImagePath = files[0]!.path;
     
     // Add timeout for real-time guarantee (max 15 seconds)
     const timeoutPromise = new Promise((_, reject) => {
@@ -25,39 +27,49 @@ router.post("/", upload.single("image"), async (req, res) => {
 
     // Use the new scanAgent with structured output and grounding search
     const analysisResult = await Promise.race([
-      analyzeImage(imagePath),
+      analyzeImage(firstImagePath),
       timeoutPromise
     ]);
 
-    // Cleanup uploaded file
-    unlinkSync(imagePath);
+    // Cleanup uploaded files
+    files.forEach(file => {
+      try {
+        unlinkSync(file.path);
+      } catch (error) {
+        console.error('File cleanup error:', error);
+      }
+    });
 
     const processingTime = Date.now() - startTime;
 
     // Return comprehensive analysis result with timing
-    res.json({
+    return res.json({
       success: true,
       data: analysisResult,
       processing_time_ms: processingTime,
       timestamp: new Date().toISOString(),
-      message: "Analisis berhasil dilakukan"
+      message: "Analisis berhasil dilakukan",
+      images_processed: files.length
     });
 
   } catch (error) {
     console.error('NusaScan Analysis Error:', error);
     
-    // Cleanup file if it exists
-    if (req.file?.path) {
-      try {
-        unlinkSync(req.file.path);
-      } catch (cleanupError) {
-        console.error('File cleanup error:', cleanupError);
-      }
+    // Cleanup files if they exist
+    const files = req.files as Express.Multer.File[];
+    if (files) {
+      files.forEach(file => {
+        try {
+          unlinkSync(file.path);
+        } catch (cleanupError) {
+          console.error('File cleanup error:', cleanupError);
+        }
+      });
     }
 
     const processingTime = Date.now() - startTime;
 
-    res.status(500).json({ 
+    return res.status(500).json({ 
       success: false,
       error: "Gagal memproses gambar",
       message: error instanceof Error ? error.message : "Unknown error occurred",
@@ -69,7 +81,7 @@ router.post("/", upload.single("image"), async (req, res) => {
 
 // Health check endpoint
 router.get("/health", (req, res) => {
-  res.json({
+  return res.json({
     status: "healthy",
     service: "NusaScan API",
     version: "1.0.0",
@@ -79,7 +91,7 @@ router.get("/health", (req, res) => {
 
 // Get supported object types
 router.get("/supported-types", (req, res) => {
-  res.json({
+  return res.json({
     success: true,
     supported_types: [
       {
@@ -187,6 +199,7 @@ router.post("/stream", upload.single("image"), async (req, res) => {
     // Cleanup
     unlinkSync(imagePath);
     res.end();
+    return;
 
   } catch (error) {
     console.error('Streaming analysis error:', error);
@@ -203,6 +216,7 @@ router.post("/stream", upload.single("image"), async (req, res) => {
     }
     
     res.end();
+    return;
   }
 });
 

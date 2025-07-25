@@ -2,7 +2,7 @@ import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
 import { LibSQLStore, LibSQLVector } from "@mastra/libsql";
 import { openai } from "@ai-sdk/openai";
-import { culturalSearchTool } from "@/mastra/tools/culturalSearchTool";
+import { culturalSearchTool } from "../tools/culturalSearchTool.js";
 import { fastembed } from "@mastra/fastembed";
 
 // Optimized memory configuration for faster performance while keeping semantic recall

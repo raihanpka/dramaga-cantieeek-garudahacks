@@ -12,12 +12,14 @@ import {
 import { router, Stack } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import { useAuth } from '@/context/AuthContext';
 import { GlobalStyles } from '@/constants/GlobalStyles';
 import { CameraStyles } from '@/constants/CameraStyles';
 import LoadingScreen from '@/components/LoadingScreen';
 import ReviewPhotos from '@/components/ReviewPhotos';
 import SubmitPhotos from '@/components/SubmitPhotos';
 import CameraControls from '@/components/CameraControls';
+import { ScanService } from '@/services/scanService';
 
 export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -30,6 +32,7 @@ export default function CameraScreen() {
   const [isUploading, setIsUploading] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const { user } = useAuth();
 
   if (!permission) {
     // Camera permissions are still loading
@@ -132,50 +135,49 @@ export default function CameraScreen() {
       return;
     }
 
+    if (!user?.id) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+
     setIsUploading(true);
     
     try {
-      // Create FormData for the API request
-      const formData = new FormData();
+      const result = await ScanService.submitForAnalysis(
+        photos,
+        title,
+        description,
+        user.id
+      );
       
-      // Add all photos
-      photos.forEach((photoUri, index) => {
-        formData.append('images', {
-          uri: photoUri,
-          type: 'image/jpeg',
-          name: `photo_${index}.jpg`,
-        } as any);
-      });
-      
-      // Add title and description
-      formData.append('title', title);
-      formData.append('description', description);
-      
-      // Make API call to your backend
-      const response = await fetch('YOUR_API_ENDPOINT_HERE', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          // Add any authentication headers if needed
-          // 'Authorization': 'Bearer YOUR_TOKEN_HERE',
-        },
-        body: formData,
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        // Handle successful upload
-        Alert.alert('Success', 'Photos uploaded successfully!', [
-          { text: 'OK', onPress: () => router.navigate('/') }
-        ]);
-        // You could also navigate to a results page with the API response:
-        // router.navigate('/results', { data: result });
+      if (result.success) {
+        Alert.alert(
+          'Success', 
+          'Photos submitted successfully! You can track the progress in your profile.',
+          [
+            { 
+              text: 'View Progress', 
+              onPress: () => router.navigate('/(tabs)/profile') 
+            },
+            { 
+              text: 'Scan More', 
+              onPress: () => {
+                // Reset form
+                setPhotos([]);
+                setTitle('');
+                setDescription('');
+                setCurrentViewMode('camera');
+                router.navigate('/scan/camera');
+              }
+            }
+          ]
+        );
       } else {
         throw new Error('Upload failed');
       }
     } catch (error) {
       console.error('Upload error:', error);
-      Alert.alert('Error', 'Failed to upload photos. Please try again.', [
+      Alert.alert('Error', 'Failed to submit photos. Please try again.', [
         { text: 'Retry', onPress: usePicture },
         { text: 'Cancel', style: 'cancel', onPress: () => setIsUploading(false) }
       ]);

@@ -19,11 +19,17 @@ export const ChatStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    zIndex: 1000,
+    elevation: 5,
   },
   backButton: {
-    padding: 8,
+    padding: 12,
     borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    minWidth: 44,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backButtonText: {
     color: 'white',

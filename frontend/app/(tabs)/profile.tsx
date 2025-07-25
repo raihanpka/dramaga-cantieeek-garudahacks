@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -7,9 +7,10 @@ import {
   Image
 } from 'react-native';
 import { router } from 'expo-router';
-import { Colors } from '@/constants/Colors';
+import { useAuth } from '@/context/AuthContext';
 import { ProfileStyles } from '@/constants/ProfileStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ScanService } from '@/services/scanService';
 
 interface UserStats {
   totalChats: number;
@@ -32,13 +33,14 @@ interface ScannedScripture {
   id: string;
   title: string;
   description: string;
-  submissionDate: string;
+  submission_date: string;
   status: 'processing' | 'transliterating' | 'reviewing' | 'approved' | 'certified' | 'rejected';
-  thumbnailUri?: string;
-  progress: number; // required field from 0 to 100
+  thumbnailUrl?: string;
+  progress: number;
 }
 
 export default function ProfileScreen() {
+  const { user } = useAuth();
   const [userStats, setUserStats] = useState<UserStats>({
     totalChats: 0,
     questionsAsked: 0,
@@ -49,44 +51,35 @@ export default function ProfileScreen() {
   const [achievements, setAchievements] = useState<Achievement[]>([
     {
       id: '1',
-      title: 'First Chat',
-      description: 'Started your first conversation with Kala',
-      icon: '💬',
+      title: 'First Scan',
+      description: 'Upload your first cultural heritage photo',
+      icon: '�',
       unlocked: false,
       requirement: 1,
       progress: 0
     },
     {
       id: '2',
-      title: 'Curious Explorer',
-      description: 'Asked 10 questions',
-      icon: '🔍',
-      unlocked: false,
-      requirement: 10,
-      progress: 0
-    },
-    {
-      id: '3',
-      title: 'Photo Enthusiast',
-      description: 'Shared 5 images with Kala',
-      icon: '📸',
+      title: 'Cultural Explorer',
+      description: 'Upload 5 different cultural artifacts',
+      icon: '🏛️',
       unlocked: false,
       requirement: 5,
       progress: 0
     },
     {
-      id: '4',
-      title: 'Streak Master',
-      description: 'Maintain a 7-day chat streak',
-      icon: '🔥',
+      id: '3',
+      title: 'Heritage Curator',
+      description: 'Upload 10 cultural heritage items',
+      icon: '🏺',
       unlocked: false,
-      requirement: 7,
+      requirement: 10,
       progress: 0
     },
     {
-      id: '5',
-      title: 'Nature Expert',
-      description: 'Had 25 conversations with Kala',
+      id: '4',
+      title: 'Knowledge Seeker',
+      description: 'Ask 25 questions to Kala',
       icon: '🌿',
       unlocked: false,
       requirement: 25,
@@ -94,53 +87,85 @@ export default function ProfileScreen() {
     }
   ]);
 
-  const [scannedScriptures, setScannedScriptures] = useState<ScannedScripture[]>([
-    {
-      id: '1',
-      title: 'Prasasti Candi Borobudur',
-      description: 'Photographed ancient stone inscription from Borobudur temple',
-      submissionDate: '2025-01-20',
-      status: 'certified',
-      progress: 100,
-      thumbnailUri: 'https://picsum.photos/seed/borobudur/200/150'
-    },
-    {
-      id: '2',
-      title: 'Naskah Lontar Bali',
-      description: 'Photographed traditional Balinese palm leaf manuscript',
-      submissionDate: '2025-01-22',
-      status: 'approved',
-      progress: 100,
-      thumbnailUri: 'https://picsum.photos/seed/lontar/200/150'
-    },
-    {
-      id: '3',
-      title: 'Batik Jawa Klasik',
-      description: 'Photographed traditional Javanese batik patterns with text',
-      submissionDate: '2025-01-24',
-      status: 'transliterating',
-      progress: 65,
-      thumbnailUri: 'https://picsum.photos/seed/batik/200/150'
-    },
-    {
-      id: '4',
-      title: 'Prasasti Sukuh',
-      description: 'Photographed stone inscription from Candi Sukuh',
-      submissionDate: '2025-01-25',
-      status: 'processing',
-      progress: 25,
-      thumbnailUri: 'https://picsum.photos/seed/sukuh/200/150'
-    },
-    {
-      id: '5',
-      title: 'Wayang Kulit Jawa',
-      description: 'Photographed traditional Javanese shadow puppet with inscriptions',
-      submissionDate: '2025-01-26',
-      status: 'reviewing',
-      progress: 80,
-      thumbnailUri: 'https://picsum.photos/seed/wayang/200/150'
+  const [scannedScriptures, setScannedScriptures] = useState<ScannedScripture[]>([]);
+
+  // Load scriptures from Supabase
+  const loadScriptures = useCallback(async () => {
+    if (user?.id) {
+      try {
+        const scriptures = await ScanService.getUserScriptures(user.id);
+        // Transform data to match local interface
+        const transformedScriptures: ScannedScripture[] = scriptures.map(s => ({
+          id: s.id,
+          title: s.title,
+          description: s.description,
+          submission_date: s.submission_date,
+          status: s.status,
+          thumbnailUrl: s.thumbnail_url,
+          progress: s.progress
+        }));
+        setScannedScriptures(transformedScriptures);
+        updateAchievements(transformedScriptures.length);
+      } catch (error) {
+        console.error('Error loading scriptures:', error);
+      }
     }
-  ]);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadScriptures();
+      
+      // Subscribe to real-time updates
+      const subscription = ScanService.subscribeToScriptureUpdates(
+        user.id,
+        (updatedScriptures) => {
+          const transformedScriptures: ScannedScripture[] = updatedScriptures.map(s => ({
+            id: s.id,
+            title: s.title,
+            description: s.description,
+            submission_date: s.submission_date,
+            status: s.status,
+            thumbnailUrl: s.thumbnail_url,
+            progress: s.progress
+          }));
+          setScannedScriptures(transformedScriptures);
+          updateAchievements(transformedScriptures.length);
+        }
+      );
+
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
+  }, [user?.id, loadScriptures]);
+
+  const updateAchievements = (scriptureCount: number) => {
+    setAchievements(prev => prev.map(achievement => {
+      if (achievement.id === '1') {
+        return {
+          ...achievement,
+          progress: Math.min(scriptureCount, achievement.requirement),
+          unlocked: scriptureCount >= achievement.requirement
+        };
+      }
+      if (achievement.id === '2') {
+        return {
+          ...achievement,
+          progress: Math.min(scriptureCount, achievement.requirement),
+          unlocked: scriptureCount >= achievement.requirement
+        };
+      }
+      if (achievement.id === '3') {
+        return {
+          ...achievement,
+          progress: Math.min(scriptureCount, achievement.requirement),
+          unlocked: scriptureCount >= achievement.requirement
+        };
+      }
+      return achievement;
+    }));
+  };
 
   useEffect(() => {
     loadUserData();
@@ -271,9 +296,9 @@ export default function ProfileScreen() {
           return (
             <View key={scripture.id} style={ProfileStyles.scriptureCard}>
               <View style={ProfileStyles.scriptureMainContent}>
-                {scripture.thumbnailUri && (
-                  <Image 
-                    source={{ uri: scripture.thumbnailUri }} 
+                {scripture.thumbnailUrl && (
+                  <Image
+                    source={{ uri: scripture.thumbnailUrl }}
                     style={ProfileStyles.scriptureThumbnail}
                   />
                 )}
@@ -287,7 +312,7 @@ export default function ProfileScreen() {
                   
                   <Text style={ProfileStyles.scriptureDescription}>{scripture.description}</Text>
                   <Text style={ProfileStyles.scriptureDate}>
-                    Photographed on {formatDate(scripture.submissionDate)}
+                    Photographed on {formatDate(scripture.submission_date)}
                   </Text>
                   
                   {scripture.progress < 100 && (

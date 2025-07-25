@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "target": "ES2022",
+    "module": "node16",
+    "moduleDetection": "force",
+    "allowJs": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "moduleResolution": "node16",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "noImplicitReturns": false,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "declaration": false,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowImportingTsExtensions": false
+  },
+  "include": [
+    "server.ts",
+    "routes/*.ts",
+    "services/*.ts",
+    "mastra/index.ts",
+    "mastra/agents/*.ts",
+    "mastra/tools/*.ts",
+    "mastra/memory/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "testing",
+    "mastra/evaluation",
+    "test-realtime.ts",
+    "start-realtime.ts"
+  ]
+}
