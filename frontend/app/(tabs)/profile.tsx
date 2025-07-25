@@ -49,8 +49,8 @@ export default function ProfileScreen() {
   const [achievements, setAchievements] = useState<Achievement[]>([
     {
       id: '1',
-      title: 'First Chat',
-      description: 'Started your first conversation with Kala',
+      title: 'Chat Pertama',
+      description: 'Memulai percakapan pertama dengan Kala',
       icon: '💬',
       unlocked: false,
       requirement: 1,
@@ -58,8 +58,8 @@ export default function ProfileScreen() {
     },
     {
       id: '2',
-      title: 'Curious Explorer',
-      description: 'Asked 10 questions',
+      title: 'Penjelajah Ingin Tahu',
+      description: 'Mengajukan 10 pertanyaan',
       icon: '🔍',
       unlocked: false,
       requirement: 10,
@@ -67,8 +67,8 @@ export default function ProfileScreen() {
     },
     {
       id: '3',
-      title: 'Photo Enthusiast',
-      description: 'Shared 5 images with Kala',
+      title: 'Penggemar Foto',
+      description: 'Berbagi 5 gambar dengan Kala',
       icon: '📸',
       unlocked: false,
       requirement: 5,
@@ -76,8 +76,8 @@ export default function ProfileScreen() {
     },
     {
       id: '4',
-      title: 'Streak Master',
-      description: 'Maintain a 7-day chat streak',
+      title: 'Master Konsistensi',
+      description: 'Mempertahankan 7 hari berturut-turut chat',
       icon: '🔥',
       unlocked: false,
       requirement: 7,
@@ -85,8 +85,8 @@ export default function ProfileScreen() {
     },
     {
       id: '5',
-      title: 'Nature Expert',
-      description: 'Had 25 conversations with Kala',
+      title: 'Ahli Budaya',
+      description: 'Melakukan 25 percakapan dengan Kala',
       icon: '🌿',
       unlocked: false,
       requirement: 25,
@@ -168,12 +168,12 @@ export default function ProfileScreen() {
 
   const getStatusDisplay = (status: ScannedScripture['status']) => {
     const statusConfig = {
-      processing: { label: 'Processing Photo', icon: '⏳', color: '#FF9500' },
-      transliterating: { label: 'Transliterating', icon: '🔤', color: '#007AFF' },
-      reviewing: { label: 'Expert Review', icon: '👁️', color: '#5856D6' },
-      approved: { label: 'Validated', icon: '✅', color: '#34C759' },
-      certified: { label: 'Certified', icon: '🏆', color: '#FFD700' },
-      rejected: { label: 'Rejected', icon: '❌', color: '#FF3B30' }
+      processing: { label: 'Memproses Foto', icon: '⏳', color: '#FF9500' },
+      transliterating: { label: 'Menerjemahkan', icon: '🔤', color: '#007AFF' },
+      reviewing: { label: 'Tinjauan Ahli', icon: '👁️', color: '#5856D6' },
+      approved: { label: 'Tervalidasi', icon: '✅', color: '#34C759' },
+      certified: { label: 'Tersertifikasi', icon: '🏆', color: '#FFD700' },
+      rejected: { label: 'Ditolak', icon: '❌', color: '#FF3B30' }
     };
     return statusConfig[status];
   };
@@ -191,19 +191,26 @@ export default function ProfileScreen() {
     <ScrollView style={ProfileStyles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
       <View style={ProfileStyles.header}>
+        <TouchableOpacity 
+          style={ProfileStyles.settingsButton}
+          onPress={() => router.push('/profile/settings')}
+        >
+          <Text style={ProfileStyles.settingsIcon}>⚙️</Text>
+        </TouchableOpacity>
+        
         <View style={ProfileStyles.avatarContainer}>
           <Image 
             source={require('@/assets/images/kala-avatar-lg.png')} 
             style={ProfileStyles.avatar}
           />
         </View>
-        <Text style={ProfileStyles.username}>Nature Explorer</Text>
-        <Text style={ProfileStyles.joinDate}>Member since {userStats.joinDate}</Text>
+        <Text style={ProfileStyles.username}>Penjelajah Budaya</Text>
+        <Text style={ProfileStyles.joinDate}>Anggota sejak {userStats.joinDate}</Text>
       </View>
 
       {/* Achievements Section */}
       <View style={ProfileStyles.section}>
-        <Text style={ProfileStyles.sectionTitle}>🏆 Achievements</Text>
+        <Text style={ProfileStyles.sectionTitle}>🏆 Pencapaian</Text>
         
         {achievements.slice(0, 3).map((achievement) => (
           <View key={achievement.id} style={[
@@ -257,59 +264,92 @@ export default function ProfileScreen() {
           style={ProfileStyles.viewAllButton}
           onPress={() => router.push('/profile/achievements')}
         >
-          <Text style={ProfileStyles.viewAllText}>View All Achievements</Text>
+          <Text style={ProfileStyles.viewAllText}>Lihat Semua Pencapaian</Text>
           <Text style={ProfileStyles.settingArrow}>›</Text>
         </TouchableOpacity>
       </View>
 
       {/* Scanned Scripture Section */}
       <View style={ProfileStyles.section}>
-        <Text style={ProfileStyles.sectionTitle}>📜 Photographed Scriptures</Text>
+        <Text style={ProfileStyles.sectionTitle}>📜 Naskah yang Difoto</Text>
         
         {scannedScriptures.slice(0, 3).map((scripture) => {
           const statusInfo = getStatusDisplay(scripture.status);
+          const isClickable = scripture.status === 'certified' || scripture.status === 'approved';
+          
+          const handleScripturePress = () => {
+            if (isClickable) {
+              // Navigate to library detail page with the scripture ID
+              router.push({
+                pathname: '/library/[id]',
+                params: { id: scripture.id }
+              });
+            }
+          };
+
+          const ScriptureContent = (
+            <View style={ProfileStyles.scriptureMainContent}>
+              {scripture.thumbnailUri && (
+                <Image 
+                  source={{ uri: scripture.thumbnailUri }} 
+                  style={ProfileStyles.scriptureThumbnail}
+                />
+              )}
+              <View style={ProfileStyles.scriptureInfo}>
+                <View style={ProfileStyles.scriptureHeader}>
+                  <Text style={ProfileStyles.scriptureTitle}>{scripture.title}</Text>
+                  <View style={[ProfileStyles.statusBadge, { backgroundColor: statusInfo.color }]}>
+                    <Text style={ProfileStyles.statusText}>{statusInfo.label}</Text>
+                  </View>
+                </View>
+                
+                <Text style={ProfileStyles.scriptureDescription}>{scripture.description}</Text>
+                <Text style={ProfileStyles.scriptureDate}>
+                  Difoto pada {formatDate(scripture.submissionDate)}
+                </Text>
+                
+                {scripture.progress < 100 && (
+                  <View style={ProfileStyles.progressContainer}>
+                    <View style={ProfileStyles.progressBar}>
+                      <View 
+                        style={[
+                          ProfileStyles.progressFill, 
+                          { 
+                            width: `${scripture.progress}%`,
+                            backgroundColor: statusInfo.color 
+                          }
+                        ]} 
+                      />
+                    </View>
+                    <Text style={ProfileStyles.progressText}>
+                      {scripture.progress}% selesai
+                    </Text>
+                  </View>
+                )}
+                
+                {/* Show clickable indicator for certified/approved scriptures */}
+                {isClickable && (
+                  <View style={ProfileStyles.clickableIndicator}>
+                    <Text style={ProfileStyles.clickableText}>📖 Lihat di perpustakaan</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          );
+
           return (
             <View key={scripture.id} style={ProfileStyles.scriptureCard}>
-              <View style={ProfileStyles.scriptureMainContent}>
-                {scripture.thumbnailUri && (
-                  <Image 
-                    source={{ uri: scripture.thumbnailUri }} 
-                    style={ProfileStyles.scriptureThumbnail}
-                  />
-                )}
-                <View style={ProfileStyles.scriptureInfo}>
-                  <View style={ProfileStyles.scriptureHeader}>
-                    <Text style={ProfileStyles.scriptureTitle}>{scripture.title}</Text>
-                    <View style={[ProfileStyles.statusBadge, { backgroundColor: statusInfo.color }]}>
-                      <Text style={ProfileStyles.statusText}>{statusInfo.label}</Text>
-                    </View>
-                  </View>
-                  
-                  <Text style={ProfileStyles.scriptureDescription}>{scripture.description}</Text>
-                  <Text style={ProfileStyles.scriptureDate}>
-                    Photographed on {formatDate(scripture.submissionDate)}
-                  </Text>
-                  
-                  {scripture.progress < 100 && (
-                    <View style={ProfileStyles.progressContainer}>
-                      <View style={ProfileStyles.progressBar}>
-                        <View 
-                          style={[
-                            ProfileStyles.progressFill, 
-                            { 
-                              width: `${scripture.progress}%`,
-                              backgroundColor: statusInfo.color 
-                            }
-                          ]} 
-                        />
-                      </View>
-                      <Text style={ProfileStyles.progressText}>
-                        {scripture.progress}% complete
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
+              {isClickable ? (
+                <TouchableOpacity 
+                  onPress={handleScripturePress}
+                  style={ProfileStyles.clickableScripture}
+                  activeOpacity={0.7}
+                >
+                  {ScriptureContent}
+                </TouchableOpacity>
+              ) : (
+                ScriptureContent
+              )}
             </View>
           );
         })}
@@ -318,52 +358,25 @@ export default function ProfileScreen() {
           style={ProfileStyles.viewAllButton}
           onPress={() => router.push('/profile/scriptures')}
         >
-          <Text style={ProfileStyles.viewAllText}>View All Scriptures</Text>
-          <Text style={ProfileStyles.settingArrow}>›</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Settings Section */}
-      <View style={ProfileStyles.section}>
-        <Text style={ProfileStyles.sectionTitle}>⚙️ Settings</Text>
-        
-        <TouchableOpacity style={ProfileStyles.settingItem}>
-          <Text style={ProfileStyles.settingText}>🔔 Notifications</Text>
-          <Text style={ProfileStyles.settingArrow}>›</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={ProfileStyles.settingItem}>
-          <Text style={ProfileStyles.settingText}>📱 Language</Text>
-          <Text style={ProfileStyles.settingArrow}>›</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={ProfileStyles.settingItem}>
-          <Text style={ProfileStyles.settingText}>🚪 Logout</Text>
+          <Text style={ProfileStyles.viewAllText}>Lihat Semua Naskah</Text>
           <Text style={ProfileStyles.settingArrow}>›</Text>
         </TouchableOpacity>
       </View>
 
       {/* About Section */}
       <View style={ProfileStyles.section}>
-        <Text style={ProfileStyles.sectionTitle}>ℹ️ About</Text>
+        <Text style={ProfileStyles.sectionTitle}>ℹ️ Tentang</Text>
         
-        <TouchableOpacity style={ProfileStyles.settingItem}>
-          <Text style={ProfileStyles.settingText}>📄 Privacy Policy</Text>
-          <Text style={ProfileStyles.settingArrow}>›</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={ProfileStyles.settingItem}>
-          <Text style={ProfileStyles.settingText}>📋 Terms of Service</Text>
-          <Text style={ProfileStyles.settingArrow}>›</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={ProfileStyles.settingItem}>
-          <Text style={ProfileStyles.settingText}>💌 Contact Support</Text>
+        <TouchableOpacity 
+          style={ProfileStyles.settingItem}
+          onPress={() => router.push('/profile/contact-support')}
+        >
+          <Text style={ProfileStyles.settingText}>💌 Hubungi Dukungan</Text>
           <Text style={ProfileStyles.settingArrow}>›</Text>
         </TouchableOpacity>
         
         <View style={ProfileStyles.versionContainer}>
-          <Text style={ProfileStyles.versionText}>Version 1.0.0</Text>
+          <Text style={ProfileStyles.versionText}>Versi 1.0.0</Text>
         </View>
       </View>
     </ScrollView>

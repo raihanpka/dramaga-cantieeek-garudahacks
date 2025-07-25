@@ -7,7 +7,7 @@ export const ProfileStyles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: Colors.light.tint,
+    backgroundColor: '#472800', // Green background 
     alignItems: 'center',
     paddingVertical: 40,
     paddingHorizontal: 20,
@@ -74,7 +74,7 @@ export const ProfileStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#91522A',
     marginBottom: 16,
   },
   achievementCard: {
@@ -147,7 +147,7 @@ export const ProfileStyles = StyleSheet.create({
   },
   progressText: {
     fontSize: 12,
-    color: '#666',
+    color: '#91522A',
     minWidth: 40,
   },
   unlockedBadge: {
@@ -175,7 +175,7 @@ export const ProfileStyles = StyleSheet.create({
   },
   viewAllText: {
     fontSize: 16,
-    color: Colors.light.tint,
+    color: '#91522A',
     fontWeight: '600',
   },
   settingItem: {
@@ -275,5 +275,45 @@ export const ProfileStyles = StyleSheet.create({
     fontSize: 12,
     color: '#999',
     marginBottom: 8,
+  },
+  clickableScripture: {
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  clickableIndicator: {
+    marginTop: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(71, 40, 0, 0.1)',
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  clickableText: {
+    fontSize: 12,
+    color: '#472800',
+    fontWeight: '600',
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  settingsIcon: {
+    fontSize: 24,
+    color: 'white',
   },
 });

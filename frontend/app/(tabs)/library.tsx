@@ -14,6 +14,7 @@ import {
   Dimensions,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router, useLocalSearchParams } from 'expo-router';
 import { GlobalStyles } from '@/constants/GlobalStyles';
 import { Colors } from '@/constants/Colors';
 import { LibraryStyles } from '@/constants/LibraryStyles';
@@ -27,6 +28,7 @@ interface HistoricalItem {
 }
 
 export default function LibraryScreen() {
+  const params = useLocalSearchParams();
   const [searchText, setSearchText] = useState('');
   const [filteredItems, setFilteredItems] = useState<HistoricalItem[]>([]);
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -210,16 +212,28 @@ export default function LibraryScreen() {
     setFilteredItems(historicalItems);
     loadRecentSearches();
 
+    // Check if there's a search query from navigation params
+    if (params.searchQuery && typeof params.searchQuery === 'string') {
+      setSearchText(params.searchQuery);
+      addToRecentSearches(params.searchQuery);
+    }
+
     // Cleanup timeout on unmount
     return () => {
       if (searchTimeout) {
         clearTimeout(searchTimeout);
       }
     };
-  }, []);
+  }, [params.searchQuery]);
 
   const renderHistoricalItem = ({ item }: { item: HistoricalItem }) => (
-    <TouchableOpacity style={LibraryStyles.itemContainer}>
+    <TouchableOpacity 
+      style={LibraryStyles.itemContainer}
+      onPress={() => router.push({
+        pathname: '/library/[id]',
+        params: { id: item.id }
+      })}
+    >
       {/* Item Image */}
       <View style={LibraryStyles.imageContainer}>
         <Image
@@ -249,20 +263,25 @@ export default function LibraryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <ImageBackground
+        source={require('@/assets/images/book-bg.png')}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Header with Search */}
           <View style={styles.header}>
             <View style={styles.searchContainer}>
-                <Image
+              <Image
                 source={require('@/assets/images/search-lens-icon.png')}
-                style={{ width: 20, height: 20, marginRight: 12 }}
+                style={styles.searchIcon}
                 resizeMode="contain"
-                />
+              />
               <View style={styles.searchInputContainer}>
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Cari di Perpustakaan"
-                  placeholderTextColor="#999"
+                  placeholder="Cari di Perpsutakaan..."
+                  placeholderTextColor="rgba(255, 255, 255, 0.4)"
                   value={searchText}
                   onChangeText={handleSearchChange}
                   onFocus={handleSearchFocus}
@@ -273,8 +292,6 @@ export default function LibraryScreen() {
                   selectionColor="#fff"
                   autoCorrect={false}
                   autoCapitalize="none"
-                  textContentType="none"
-                  importantForAccessibility="no"
                 />
               </View>
               <TouchableOpacity 
@@ -283,9 +300,14 @@ export default function LibraryScreen() {
               >
                 <Image
                   source={require('@/assets/images/filter-icon.png')}
-                  style={{ width: 24, height: 24 }}
+                  style={styles.filterIcon}
                   resizeMode="contain"
                 />
+                {selectedFilters.length > 0 && (
+                  <View style={styles.filterBadge}>
+                    <Text style={styles.filterBadgeText}>{selectedFilters.length}</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             </View>
 
@@ -306,7 +328,7 @@ export default function LibraryScreen() {
                   >
                     <Image
                       source={require('@/assets/images/search-lens-icon.png')}
-                      style={{ width: 16, height: 16, marginRight: 12, opacity: 0.6 }}
+                      style={styles.recentSearchIcon}
                       resizeMode="contain"
                     />
                     <Text style={styles.recentSearchText}>{searchTerm}</Text>
@@ -318,13 +340,24 @@ export default function LibraryScreen() {
 
           {/* White Bottom Card Container */}
           <View style={styles.bottomCardContainer}>
-            {/* Library Title */}
-            <Text style={styles.libraryTitle}>Perpustakaan</Text>
+            {/* Library Header */}
+            <View style={styles.libraryHeader}>
+              <View>
+                <Text style={styles.libraryTitle}>Perpustakaan Digital</Text>
+                <Text style={styles.librarySubtitle}>
+                  {filteredItems.length} naskah ditemukan
+                </Text>
+              </View>
+              <View style={styles.headerIcon}>
+                <Text style={styles.headerIconText}>📚</Text>
+              </View>
+            </View>
             
             {/* Selected Filters Display */}
             {selectedFilters.length > 0 && (
               <View style={styles.selectedFiltersContainer}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <Text style={styles.filterSectionTitle}>Filter Aktif:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScrollView}>
                   {selectedFilters.map((filter) => (
                     <View key={filter} style={styles.selectedFilterTag}>
                       <Text style={styles.selectedFilterText}>{filter}</Text>
@@ -341,16 +374,30 @@ export default function LibraryScreen() {
             )}
             
             {/* Historical Items Grid */}
-            <FlatList
-              data={filteredItems}
-              renderItem={renderHistoricalItem}
-              keyExtractor={(item) => item.id}
-              numColumns={2}
-              contentContainerStyle={styles.gridContainer}
-              columnWrapperStyle={styles.row}
-              showsVerticalScrollIndicator={false}
-              scrollEnabled={false}
-            />
+            <View style={styles.gridSection}>
+              <FlatList
+                data={filteredItems}
+                renderItem={renderHistoricalItem}
+                keyExtractor={(item) => item.id}
+                numColumns={2}
+                contentContainerStyle={styles.gridContainer}
+                columnWrapperStyle={styles.row}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+                ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+              />
+            </View>
+            
+            {/* Empty State */}
+            {filteredItems.length === 0 && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateIcon}>🔍</Text>
+                <Text style={styles.emptyStateTitle}>Tidak ada hasil</Text>
+                <Text style={styles.emptyStateText}>
+                  Coba ubah kata kunci pencarian atau hapus filter
+                </Text>
+              </View>
+            )}
             
             {/* Bottom Spacing */}
             <View style={styles.bottomSpacing} />
@@ -413,6 +460,7 @@ export default function LibraryScreen() {
             </View>
           </Modal>
         </ScrollView>
+      </ImageBackground>
     </SafeAreaView>
   );
 }
@@ -435,77 +483,117 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(71, 40, 0, 0.9)',
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    backgroundColor: 'rgba(71, 40, 0, 0.95)',
+    borderRadius: 30,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    borderWidth: 1,
-    borderColor: '#fff',
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 8,
   },
   searchIcon: {
-    fontSize: 20,
+    width: 22,
+    height: 22,
     marginRight: 12,
-    color: '#666',
+    tintColor: 'rgba(255, 255, 255, 0.8)',
   },
   searchInputContainer: {
-    borderWidth: 0,
-    borderColor: 'transparent',
     flex: 1,
   },
   searchInput: {
     fontSize: 16,
-    borderWidth: 0,
     color: '#fff',
     paddingVertical: 0,
-    borderColor: 'transparent',
-    backgroundColor: 'transparent',
-    outline: 'none',
-    outlineWidth: 0,
-    outlineColor: 'transparent',
+    fontWeight: '500',
   } as any,
   filterButton: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    position: 'relative',
   },
   filterIcon: {
-    fontSize: 18,
-    color: '#666',
+    width: 24,
+    height: 24,
+    tintColor: '#fff',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#FF6B6B',
+    borderRadius: 10,
+    width: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterBadgeText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   bottomCardContainer: {
     backgroundColor: 'white',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    marginTop: 40,
-    paddingTop: 24,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    marginTop: 20,
+    paddingTop: 32,
     minHeight: 900,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: -4,
+      height: -8,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 12,
+  },
+  libraryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 24,
+    marginBottom: 28,
+    paddingBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139, 69, 19, 0.1)',
   },
   libraryTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
-    marginLeft: 20,
-    marginBottom: 20,
+    color: '#2C1810',
+    marginBottom: 4,
+  },
+  librarySubtitle: {
+    fontSize: 16,
+    color: '#8B4513',
+    fontWeight: '500',
+  },
+  headerIcon: {
+    backgroundColor: 'rgba(139, 69, 19, 0.1)',
+    borderRadius: 20,
+    padding: 12,
+  },
+  headerIconText: {
+    fontSize: 24,
+  },
+  gridSection: {
+    paddingHorizontal: 24,
   },
   gridContainer: {
-    padding: 16,
+    gap: 16,
   },
   row: {
     justifyContent: 'space-between',
+    gap: 16,
   },
   bottomSpacing: {
     height: 100,
@@ -513,81 +601,135 @@ const styles = StyleSheet.create({
   // Recent searches styles
   recentSearchesContainer: {
     backgroundColor: 'white',
-    borderRadius: 12,
-    marginTop: 8,
-    paddingVertical: 8,
+    borderRadius: 20,
+    marginTop: 12,
+    paddingVertical: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 6,
   },
   recentSearchesTitle: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: '700',
+    color: '#8B4513',
     textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
   recentSearchesHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 8,
   },
   clearSearchesText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#8B4513',
+    fontWeight: '700',
+    color: '#FF6B6B',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   recentSearchItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginHorizontal: 8,
+  },
+  recentSearchIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 12,
+    opacity: 0.6,
+    tintColor: '#8B4513',
   },
   recentSearchText: {
     fontSize: 16,
     color: '#333',
     flex: 1,
+    fontWeight: '500',
   },
   // Filter-related styles
   selectedFiltersContainer: {
-    marginHorizontal: 20,
-    marginBottom: 16,
+    marginHorizontal: 24,
+    marginBottom: 24,
+  },
+  filterSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B4513',
+    marginBottom: 12,
+  },
+  filterScrollView: {
+    marginTop: 8,
   },
   selectedFilterTag: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#8B4513',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
+    borderRadius: 25,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 12,
+    shadowColor: '#8B4513',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
   },
   selectedFilterText: {
     color: 'white',
     fontSize: 14,
-    fontWeight: '500',
-    marginRight: 6,
+    fontWeight: '600',
+    marginRight: 8,
   },
   removeFilterButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   removeFilterText: {
     color: 'white',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    lineHeight: 16,
+    lineHeight: 18,
+  },
+  // Empty state styles
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+    paddingHorizontal: 40,
+  },
+  emptyStateIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+    opacity: 0.5,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#8B4513',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 24,
   },
   // Modal styles
   modalOverlay: {
