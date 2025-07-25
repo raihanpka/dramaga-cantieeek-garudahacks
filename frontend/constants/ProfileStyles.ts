@@ -212,4 +212,68 @@ export const ProfileStyles = StyleSheet.create({
     fontSize: 14,
     color: '#999',
   },
+  // Scripture-related styles
+  scriptureCard: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  scriptureMainContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  scriptureThumbnail: {
+    width: 80,
+    height: 60,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: '#f0f0f0',
+  },
+  scriptureInfo: {
+    flex: 1,
+  },
+  scriptureHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  scriptureTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+    marginRight: 8,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusText: {
+    fontSize: 12,
+    color: 'white',
+    fontWeight: '600',
+  },
+  scriptureDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  scriptureDate: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 8,
+  },
 });

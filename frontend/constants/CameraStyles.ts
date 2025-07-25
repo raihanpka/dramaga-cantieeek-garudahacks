@@ -134,6 +134,12 @@ export const CameraStyles = StyleSheet.create({
   finishButtonText: {
     fontSize: 16,
     color: '#333',
-    fontWeight: 'bold',
+    fontWeight: 'regular',
+  },
+    importIcon: {
+    width: 24,
+    height: 24,
+    resizeMode: 'contain',
+    opacity: 0.8,
   },
 });

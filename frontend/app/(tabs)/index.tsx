@@ -10,6 +10,7 @@ import {
   Image,
   ImageBackground,
 } from 'react-native';
+import KalaNusaLogo from '@/assets/images/KalaNusa-logo-sm-white.svg';
 
 export default function HomeScreen() {
   return (
@@ -41,12 +42,9 @@ export default function HomeScreen() {
             >
             <View style={styles.welcomeContent}>
               <View style={styles.welcomeTextContainer}>
-              <Text style={styles.welcomeTitle}>Halo, Fulan!</Text>
-              <Text style={styles.welcomeSubtitle}>Selamat datang di</Text>
-              <Image
-                source={require('@/assets/images/KalaNusa-logo-sm-white.png')}
-                style={{ width: 120, height: 30, resizeMode: 'contain' }}
-              />
+                <Text style={styles.welcomeTitle}>Halo, Fulan! 👋</Text>
+                <Text style={styles.welcomeSubtitle}>Selamat datang di</Text>
+                <KalaNusaLogo width={175} height={60} />
               </View>
               <View style={styles.avatarContainer}>
               <Image
@@ -202,15 +200,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 4,
+    marginBottom: 3,
   },
   welcomeSubtitle: {
     fontSize: 16,
     color: 'white',
-    marginBottom: 4,
+    marginBottom: 5,
   },
   appName: {
-    fontSize: 24,
+    fontSize: 30,
     fontWeight: 'bold',
     color: 'white',
   },
