@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -10,13 +10,16 @@ import {
   Platform,
   Image,
   Alert,
-  Modal
+  Modal,
+  ActivityIndicator,
+  BackHandler
 } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router, Stack, useFocusEffect } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ChatStyles } from '@/constants/ChatStyles';
 import { formatMessageText } from '@/utils/textUtils';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || '';
 
 interface Message {
   id: string;
@@ -33,13 +36,32 @@ export default function ChatScreen() {
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
+  const [isBotTyping, setIsBotTyping] = useState(false);
 
   const STORAGE_KEY = 'kala_chat_messages';
+
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || '';
 
   // Load messages from storage on component mount
   useEffect(() => {
     loadMessages();
   }, []);
+
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace && router.replace('/');
+        }
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
 
   // Save messages to storage whenever messages change
   useEffect(() => {
@@ -62,7 +84,7 @@ export default function ChatScreen() {
         // Set default welcome message if no stored messages
         const welcomeMessage: Message = {
           id: '1',
-          text: 'Hello! I\'m Kala, your AI assistant. How can I help you today?',
+          text: 'Selamat datang! Aku Kala, asisten budaya Indonesia. Aku siap membantu kamu mengenal, memahami, dan melestarikan budaya Nusantara. Ada pertanyaan atau hal budaya yang ingin kamu bahas hari ini?',
           isUser: false,
           timestamp: new Date(),
         };
@@ -73,7 +95,7 @@ export default function ChatScreen() {
       // Set default welcome message on error
       const welcomeMessage: Message = {
         id: '1',
-        text: 'Hello! I\'m Kala, your AI assistant. How can I help you today?',
+        text: 'Selamat datang! Aku Kala, asisten budaya Indonesia. Aku siap membantu kamu mengenal, memahami, dan melestarikan budaya Nusantara. Ada pertanyaan atau hal budaya yang ingin kamu bahas hari ini?',
         isUser: false,
         timestamp: new Date(),
       };
@@ -96,7 +118,7 @@ export default function ChatScreen() {
       await AsyncStorage.removeItem(STORAGE_KEY);
       const welcomeMessage: Message = {
         id: '1',
-        text: 'Hello! I\'m Kala, your AI assistant. How can I help you today?',
+        text: 'Selamat datang! Aku Kala, asisten budaya Indonesia. Aku siap membantu kamu mengenal, memahami, dan melestarikan budaya Nusantara. Ada pertanyaan atau hal budaya yang ingin kamu bahas hari ini?',
         isUser: false,
         timestamp: new Date(),
       };
@@ -131,7 +153,7 @@ export default function ChatScreen() {
     }
   };
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputText.trim() === '' && selectedImages.length === 0) return;
 
     // Add user message
@@ -145,22 +167,53 @@ export default function ChatScreen() {
 
     setMessages(prev => [...prev, userMessage]);
 
-    // Simulate AI response (replace with actual AI API call)
-    setTimeout(() => {
-      let responseText = 'Halo aku Kala! Lutung serba tahu yang bisa membantumu. Adakah yang mau kamu tanyakan?';
-      
-      if (selectedImages.length > 0) {
-        responseText = 'I can see your image! As Kala, I can help you identify plants, animals, or answer questions about what you\'ve shared. What would you like to know?';
+    // Prepare API call
+    try {
+      const apiUrl = process.env.EXPO_PUBLIC_API_URL || 'https://api-kalanusa.vercel.app';
+      const threadId = undefined; // Optionally, manage threadId for chat history
+      const resourceId = undefined; // Optionally, set resourceId for user scoping
+
+      const body: any = {
+        message: inputText,
+        threadId,
+        resourceId,
+      };
+
+      const response = await fetch(`${apiUrl}/api/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      const data = await response.json();
+      if (data.success && data.data && data.data.response) {
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.data.response,
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiResponse]);
+      } else {
+        const aiResponse: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.message || 'Maaf, terjadi kesalahan pada server.',
+          isUser: false,
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, aiResponse]);
       }
-      
+    } catch (error) {
       const aiResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: responseText,
+        text: 'Maaf, terjadi kesalahan koneksi ke server.',
         isUser: false,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+    }
 
     // Clear input and selected image
     setInputText('');
@@ -251,11 +304,11 @@ export default function ChatScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={ChatStyles.container}>
+      <SafeAreaView style={[ChatStyles.container, { paddingTop: Platform.OS === 'android' ? 32 : 0 }]}>
       <KeyboardAvoidingView 
         style={ChatStyles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={90}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         {/* Header with Back Button */}
         <View style={ChatStyles.fullScreenHeader}>
@@ -263,7 +316,11 @@ export default function ChatScreen() {
             style={ChatStyles.backButton}
             onPress={() => {
               console.log('Back button pressed');
-              router.back();
+              if (router.canGoBack && router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace && router.replace('/');
+              }
             }}
             activeOpacity={0.7}
             hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
@@ -295,14 +352,22 @@ export default function ChatScreen() {
             <Text>Loading chat history...</Text>
           </View>
         ) : (
-          <FlatList
-            data={messages}
-            renderItem={renderMessage}
-            keyExtractor={(item) => item.id}
-            style={ChatStyles.messagesList}
-            contentContainerStyle={ChatStyles.messagesContainer}
-            showsVerticalScrollIndicator={false}
-          />
+          <>
+            <FlatList
+              data={messages}
+              renderItem={renderMessage}
+              keyExtractor={(item) => item.id}
+              style={ChatStyles.messagesList}
+              contentContainerStyle={ChatStyles.messagesContainer}
+              showsVerticalScrollIndicator={false}
+            />
+            {isBotTyping && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', padding: 12 }}>
+                <ActivityIndicator size="small" color="#888" />
+                <Text style={{ marginLeft: 8, color: '#888' }}>Kala is typing...</Text>
+              </View>
+            )}
+          </>
         )}
 
         {/* Input Area */}

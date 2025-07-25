@@ -7,7 +7,9 @@ import {
   Alert,
   Modal,
   ScrollView,
-  StyleSheet
+  StyleSheet,
+  Platform,
+  Dimensions
 } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
@@ -52,9 +54,7 @@ export default function CameraScreen() {
     );
   }
 
-  function toggleCameraFacing() {
-    setFacing((current: CameraType) => (current === 'back' ? 'front' : 'back'));
-  }
+
 
   const openInfoModal = () => {
     setShowInfoModal(true);
@@ -75,7 +75,7 @@ export default function CameraScreen() {
         });
         setPhotos(prev => [...prev, photoData.uri]);
         // Stay in camera mode instead of switching to review
-      } catch (error) {
+      } catch {
         Alert.alert('Error', 'Failed to take picture');
       }
     }
@@ -107,7 +107,7 @@ export default function CameraScreen() {
 
     // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: 'images',
       allowsMultipleSelection: true,
       quality: 0.8,
       selectionLimit: 10, // Limit to 10 photos
@@ -232,12 +232,12 @@ export default function CameraScreen() {
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <SafeAreaView style={GlobalStyles.darkContainer}>
+      <SafeAreaView style={[GlobalStyles.darkContainer, {paddingTop: Platform.OS === 'android' ? 32 : 0, paddingBottom: 24}]}> 
         {/* Header with X button */}
-        <View style={[GlobalStyles.overlayHeader, { backgroundColor: '#472800', opacity: 1, height: 60 }]}>
+        <View style={[GlobalStyles.overlayHeader, { backgroundColor: '#472800', opacity: 1, height: 60, paddingTop: Platform.OS === 'android' ? 16 : 12 }]}> 
           <TouchableOpacity 
             style={GlobalStyles.closeButton}
-            onPress={() => router.navigate('/')}
+            onPress={() => router.back()}
           >
             <Text style={[GlobalStyles.closeButtonText, { color: '#fff' }]}>✕</Text>
           </TouchableOpacity>
@@ -247,20 +247,24 @@ export default function CameraScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Camera View */}
-        <View style={CameraStyles.cameraContainer}>
-          <CameraView 
-            style={GlobalStyles.camera} 
-            facing={facing}
-            ref={cameraRef}
-          />
-          {/* Camera Controls Overlay */}
-          <CameraControls
-            photos={photos}
-            onTakePicture={takePicture}
-            onFinishTakingPhotos={finishTakingPhotos}
-            onPickImages={pickImages}
-          />
+        {/* Camera Layout: camera preview with maxHeight, controls always at bottom */}
+        <View style={{flex: 1, width: '100%', justifyContent: 'flex-start', alignItems: 'center'}}>
+          <View style={{width: '100%', alignItems: 'center', justifyContent: 'center', maxHeight: Dimensions.get('window').height * 0.6, marginTop: 40}}>
+            <CameraView 
+              style={{aspectRatio: 3/4, width: '90%', maxHeight: Dimensions.get('window').height * 0.6, borderRadius: 16, overflow: 'hidden', backgroundColor: 'black', alignSelf: 'center'}} 
+              facing={facing}
+              ref={cameraRef}
+            />
+          </View>
+          {/* Camera Controls Overlay always at bottom */}
+          <View style={{width: '100%', position: 'absolute', bottom: 0, left: 0, right: 0, paddingBottom: 16, backgroundColor: 'transparent', alignItems: 'center'}}>
+            <CameraControls
+              photos={photos}
+              onTakePicture={takePicture}
+              onFinishTakingPhotos={finishTakingPhotos}
+              onPickImages={pickImages}
+            />
+          </View>
         </View>
 
         {/* Information Modal */}
@@ -289,12 +293,12 @@ export default function CameraScreen() {
               
               <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
                 <Text style={styles.modalText}>
-                  <Text style={styles.boldText}>NusaScan</Text> adalah fitur yang memungkinkan Anda berkontribusi dalam digitalisasi naskah dan prasasti bersejarah Indonesia.
+                  <Text style={styles.boldText}>NusaScan</Text> adalah fitur yang memungkinkan Anda berkontribusi dalam digitalisasi arsip budaya dan prasasti bersejarah Indonesia.
                 </Text>
                 
-                <Text style={styles.sectionTitle}>🏛️ Apa itu Digitalisasi Naskah?</Text>
+                <Text style={styles.sectionTitle}>🏛️ Apa itu Digitalisasi Arsip Budaya?</Text>
                 <Text style={styles.modalText}>
-                  Digitalisasi naskah adalah proses mengubah dokumen fisik bersejarah menjadi format digital agar dapat:
+                  Digitalisasi arsip budaya adalah proses mengubah dokumen fisik bersejarah menjadi format digital agar dapat:
                   {'\n'}• Dipelajari dan diakses oleh generasi mendatang
                   {'\n'}• Dicari dan ditemukan dengan mudah
                   {'\n'}• Dilindungi dari kerusakan waktu

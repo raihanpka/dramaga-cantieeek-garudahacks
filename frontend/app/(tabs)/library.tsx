@@ -12,6 +12,7 @@ import {
   StyleSheet,
   Modal,
   Dimensions,
+  Platform
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -43,57 +44,41 @@ export default function LibraryScreen() {
   // Available filter options
   const filterOptions = ['Sunda', 'Jawa', 'Bali', 'Sumatra', 'Kalimantan', 'Sulawesi', 'Papua'];
 
-  // Sample data - replace with actual data from your API
-  const historicalItems: HistoricalItem[] = [
-    {
-      id: '1',
-      title: 'Peninggalan Raja Jawa',
-      category: 'Jawa',
-      imageUrl: 'https://example.com/image1.jpg',
-      pageCount: 2,
-    },
-    {
-      id: '2',
-      title: 'Arsitektur Sunda Kuno',
-      category: 'Sunda',
-      imageUrl: 'https://example.com/image2.jpg',
-      pageCount: 3,
-    },
-    {
-      id: '3',
-      title: 'Warisan Budaya Bali',
-      category: 'Bali',
-      imageUrl: 'https://example.com/image3.jpg',
-      pageCount: 4,
-    },
-    {
-      id: '4',
-      title: 'Kerajaan Sumatra',
-      category: 'Sumatra',
-      imageUrl: 'https://example.com/image4.jpg',
-      pageCount: 2,
-    },
-    {
-      id: '5',
-      title: 'Tradisi Kalimantan',
-      category: 'Kalimantan',
-      imageUrl: 'https://example.com/image5.jpg',
-      pageCount: 5,
-    },
-    {
-      id: '6',
-      title: 'Candi Jawa Tengah',
-      category: 'Jawa',
-      imageUrl: 'https://example.com/image6.jpg',
-      pageCount: 3,
-    },
-  ];
 
+  // State untuk semua arsip budaya dari Supabase
+  const [allItems, setAllItems] = useState<HistoricalItem[]>([]);
+
+  // Fetch data dari Supabase saat mount
   React.useEffect(() => {
-    // Filter items based on search text and selected filters
-    let filtered = historicalItems;
+    const fetchData = async () => {
+      try {
+        const { supabase } = await import('@/lib/supabase');
+        const { data, error } = await supabase
+          .from('scanned_scriptures')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        // Map ke format HistoricalItem
+        const mapped: HistoricalItem[] = (data || []).map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          category: item.category || 'Lainnya',
+          imageUrl: item.thumbnail_url || (item.image_urls && item.image_urls[0]) || 'https://placehold.co/300x400',
+          pageCount: item.image_urls ? item.image_urls.length : 1,
+        }));
+        setAllItems(mapped);
+        setFilteredItems(mapped);
+      } catch (e) {
+        setAllItems([]);
+        setFilteredItems([]);
+      }
+    };
+    fetchData();
+  }, []);
 
-    // Apply search filter
+  // Filtering dan search
+  React.useEffect(() => {
+    let filtered = allItems;
     if (searchText.trim() !== '') {
       filtered = filtered.filter(
         item =>
@@ -101,16 +86,13 @@ export default function LibraryScreen() {
           item.category.toLowerCase().includes(searchText.toLowerCase())
       );
     }
-
-    // Apply region filters
     if (selectedFilters.length > 0) {
       filtered = filtered.filter(
         item => selectedFilters.includes(item.category)
       );
     }
-
     setFilteredItems(filtered);
-  }, [searchText, selectedFilters]);
+  }, [searchText, selectedFilters, allItems]);
 
   const toggleFilter = (filter: string) => {
     if (selectedFilters.includes(filter)) {
@@ -208,11 +190,10 @@ export default function LibraryScreen() {
   };
 
   React.useEffect(() => {
-    // Initialize with all items and load recent searches
-    setFilteredItems(historicalItems);
+    // Load recent searches
     loadRecentSearches();
 
-    // Check if there's a search query from navigation params
+    // Check if ada search query dari params
     if (params.searchQuery && typeof params.searchQuery === 'string') {
       setSearchText(params.searchQuery);
       addToRecentSearches(params.searchQuery);
@@ -229,10 +210,7 @@ export default function LibraryScreen() {
   const renderHistoricalItem = ({ item }: { item: HistoricalItem }) => (
     <TouchableOpacity 
       style={LibraryStyles.itemContainer}
-      onPress={() => router.push({
-        pathname: '/library/[id]',
-        params: { id: item.id }
-      })}
+      onPress={() => router.push(`/(tabs)/library/${item.id}` as any)}
     >
       {/* Item Image */}
       <View style={LibraryStyles.imageContainer}>
@@ -262,7 +240,7 @@ export default function LibraryScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, {paddingTop: Platform.OS === 'android' ? 32 : 0, paddingBottom: 24}]}> 
       <ImageBackground
         source={require('@/assets/images/book-bg.png')}
         style={styles.backgroundImage}
@@ -270,7 +248,7 @@ export default function LibraryScreen() {
       >
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Header with Search */}
-          <View style={styles.header}>
+          <View style={[styles.header, {paddingTop: 0}]}> 
             <View style={styles.searchContainer}>
               <Image
                 source={require('@/assets/images/search-lens-icon.png')}
@@ -343,9 +321,9 @@ export default function LibraryScreen() {
             {/* Library Header */}
             <View style={styles.libraryHeader}>
               <View>
-                <Text style={styles.libraryTitle}>Perpustakaan Digital</Text>
+                <Text style={styles.libraryTitle}>Perpustakaan Budaya Digital</Text>
                 <Text style={styles.librarySubtitle}>
-                  {filteredItems.length} naskah ditemukan
+                  {filteredItems.length} arsip budaya ditemukan
                 </Text>
               </View>
               <View style={styles.headerIcon}>

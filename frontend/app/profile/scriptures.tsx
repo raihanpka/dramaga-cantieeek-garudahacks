@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
   Image,
-  StyleSheet
+  StyleSheet,
+  BackHandler
 } from 'react-native';
-import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { ProfileStyles } from '@/constants/ProfileStyles';
 
@@ -22,6 +24,21 @@ interface ScannedScripture {
 }
 
 export default function ScripturesScreen() {
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+          return true;
+        }
+        // Prevent error: do nothing if can't go back
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
   const [scannedScriptures] = useState<ScannedScripture[]>([
     {
       id: '1',
@@ -111,18 +128,24 @@ export default function ScripturesScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Image
-            source={require('@/assets/images/backarrow-icon.png')}
-            style={{ width: 24, height: 24, tintColor: 'white' }}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Scriptures</Text>
-        <View style={styles.placeholder} />
-      </View>
+      {/* Header with SafeAreaView for top only */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: Colors.light.tint }}>
+        <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => {
+          if (router.canGoBack && router.canGoBack()) {
+            router.back();
+          }
+        }}>
+            <Image
+              source={require('@/assets/images/backarrow-icon.png')}
+              style={{ width: 24, height: 24, tintColor: 'white' }}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>All Scriptures</Text>
+          <View style={styles.placeholder} />
+        </View>
+      </SafeAreaView>
 
       {/* Progress Summary */}
       <View style={styles.summaryCard}>
@@ -242,7 +265,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 15,
     paddingBottom: 15,
     paddingHorizontal: 20,
   },

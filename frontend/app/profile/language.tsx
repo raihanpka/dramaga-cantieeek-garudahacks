@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
   Image,
-  StyleSheet
+  StyleSheet,
+  BackHandler
 } from 'react-native';
-import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
 
 interface Language {
   code: string;
@@ -17,6 +19,21 @@ interface Language {
 }
 
 export default function LanguageScreen() {
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace && router.replace('/');
+        }
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
   const [selectedLanguage, setSelectedLanguage] = useState('en');
 
   const languages: Language[] = [
@@ -39,20 +56,28 @@ export default function LanguageScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Image
-            source={require('@/assets/images/backarrow-icon.png')}
-            style={styles.backIcon}
-          />
-        </TouchableOpacity>
-                <Text style={styles.headerTitle}>Pengaturan Bahasa</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* Header with SafeAreaView for top only */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: '#472800' }}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack && router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace && router.replace('/');
+            }
+          }}
+          >
+            <Image
+              source={require('@/assets/images/backarrow-icon.png')}
+              style={styles.backIcon}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Pengaturan Bahasa</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </SafeAreaView>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Current Language */}
@@ -112,7 +137,7 @@ export default function LanguageScreen() {
         <View style={styles.infoContainer}>
           <Text style={styles.infoTitle}>📝 Tentang Dukungan Bahasa</Text>
           <Text style={styles.infoText}>
-            • Pengenalan naskah bersejarah bekerja paling baik dengan Bahasa Indonesia dan Inggris
+            • Pengenalan arsip budaya bersejarah bekerja paling baik dengan Bahasa Indonesia dan Inggris
           </Text>
           <Text style={styles.infoText}>
             • Bahasa tradisional (Jawa, Sunda) didukung untuk konten budaya
@@ -156,7 +181,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
     paddingBottom: 15,
     paddingHorizontal: 20,
     shadowColor: '#000',

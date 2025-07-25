@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/context/AuthContext';
 import {
   View,
   Text,
@@ -11,6 +13,7 @@ import {
   ImageBackground,
   FlatList,
   Dimensions,
+  Platform
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -29,10 +32,28 @@ export default function HomeScreen() {
   // Storage key for recent searches (same as library)
   const RECENT_SEARCHES_KEY = '@library_recent_searches';
 
+  const { user } = useAuth();
+  const [firstName, setFirstName] = useState<string>('Fulan');
+
+  useEffect(() => {
+    const fetchName = async () => {
+      if (!user?.id) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('fullname')
+        .eq('id', user.id)
+        .single();
+      if (data?.fullname) {
+        setFirstName(data.fullname.split(' ')[0]);
+      }
+    };
+    fetchName();
+  }, [user?.id]);
+
   const cardData = [
     {
       type: 'welcome',
-      title: 'Halo, Fulan! 👋',
+      title: `Halo, ${firstName}! 👋`,
       subtitle: 'Selamat datang di',
       showLogo: true,
     },
@@ -208,7 +229,7 @@ export default function HomeScreen() {
     setShowRecentSearches(false);
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, {paddingTop: Platform.OS === 'android' ? 32 : 0, paddingBottom: 24}]}> 
       <ImageBackground
         source={require('@/assets/images/book-bg.png')}
         style={styles.backgroundImage}
@@ -304,7 +325,7 @@ export default function HomeScreen() {
             {/* Recent Scriptures Section */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Naskah Terbaru</Text>
+                <Text style={styles.sectionTitle}>Arsip Terbaru</Text>
                 <TouchableOpacity onPress={handleSeeAllPress}>
                   <Text style={styles.seeAllText}>Lihat Semua</Text>
                 </TouchableOpacity>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -8,24 +8,27 @@ import {
   StyleSheet,
   TextInput,
   Alert,
-  Linking
+  Linking,
+  BackHandler
 } from 'react-native';
-import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
 
 export default function ContactSupportScreen() {
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
+  const [email, setEmail] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [message, setMessage] = useState('');
 
+  // Support categories for the form
   const supportCategories = [
-    { id: 'technical', title: 'Technical Issues', icon: '⚙️' },
-    { id: 'account', title: 'Account Problems', icon: '👤' },
-    { id: 'cultural', title: 'Cultural Content', icon: '🏛️' },
-    { id: 'feedback', title: 'Feedback & Suggestions', icon: '💡' },
-    { id: 'privacy', title: 'Privacy Concerns', icon: '🔒' },
+    { id: 'general', title: 'General', icon: '📋' },
+    { id: 'technical', title: 'Technical', icon: '🛠️' },
+    { id: 'feedback', title: 'Feedback', icon: '💡' },
+    { id: 'account', title: 'Account', icon: '👤' },
     { id: 'other', title: 'Other', icon: '❓' },
   ];
 
+  // FAQ items
   const faqItems = [
     {
       question: 'How accurate is the cultural artifact recognition?',
@@ -52,6 +55,22 @@ export default function ContactSupportScreen() {
       answer: 'We do not sell personal data. We may share anonymized cultural data with research institutions for preservation purposes. See our Privacy Policy.'
     }
   ];
+
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace && router.replace('/');
+        }
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
 
   const handleSendMessage = () => {
     if (!selectedCategory || !message.trim() || !email.trim()) {
@@ -90,23 +109,31 @@ export default function ContactSupportScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Image
-            source={require('@/assets/images/backarrow-icon.png')}
-            style={styles.backIcon}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Hubungi Dukungan</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* Header with SafeAreaView for top only */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: '#472800' }}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack && router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace && router.replace('/');
+            }
+          }}
+          >
+            <Image
+              source={require('@/assets/images/backarrow-icon.png')}
+              style={styles.backIcon}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Hubungi Dukungan</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </SafeAreaView>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Quick Contact Methods */}
+        {/* ...existing code for content... */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Get in Touch</Text>
           <View style={styles.contactMethodsContainer}>
@@ -248,7 +275,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
     paddingBottom: 15,
     paddingHorizontal: 20,
     shadowColor: '#000',

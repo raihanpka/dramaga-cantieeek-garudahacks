@@ -42,7 +42,7 @@ export const visionTool = createTool({
                 type: "text", 
                 text: `Analisis gambar ini sebagai objek budaya Indonesia. Berikan informasi dalam format JSON:
 FOKUS ANALISIS:
-1. Identifikasi kategori objek budaya (batik, keris, wayang, candi, topeng, naskah kuno, dll)
+1. Identifikasi kategori objek budaya (batik, keris, wayang, candi, topeng, arsip budaya kuno, dll)
 2. Jenis spesifik dan karakteristik unik
 3. Ekstrak semua teks yang terlihat (jika ada)
 4. Elemen budaya dan artistik yang teridentifikasi

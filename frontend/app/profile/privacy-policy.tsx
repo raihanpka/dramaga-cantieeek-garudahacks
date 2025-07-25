@@ -1,31 +1,56 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
   Image,
-  StyleSheet
+  StyleSheet,
+  BackHandler
 } from 'react-native';
-import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
 
 export default function PrivacyPolicyScreen() {
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace && router.replace('/');
+        }
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Image
-            source={require('@/assets/images/backarrow-icon.png')}
-            style={styles.backIcon}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Kebijakan Privasi</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* Header with SafeAreaView for top only */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: '#472800' }}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack && router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace && router.replace('/');
+            }
+          }}
+          >
+            <Image
+              source={require('@/assets/images/backarrow-icon.png')}
+              style={styles.backIcon}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Kebijakan Privasi</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </SafeAreaView>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -38,7 +63,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Introduction</Text>
             <Text style={styles.paragraph}>
-              Welcome to Kala Cultural Heritage Assistant ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.
+              Welcome to Kala Cultural Heritage Assistant (we, our, or us). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application.
             </Text>
           </View>
 
@@ -129,7 +154,7 @@ export default function PrivacyPolicyScreen() {
 
           {/* Children's Privacy */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Children's Privacy</Text>
+            <Text style={styles.sectionTitle}>Children&#39;s Privacy</Text>
             <Text style={styles.paragraph}>
               Our app is not intended for children under 13. We do not knowingly collect personal information from children under 13. If you believe we have inadvertently collected such information, please contact us immediately.
             </Text>
@@ -139,7 +164,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Changes to This Policy</Text>
             <Text style={styles.paragraph}>
-              We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the "Last updated" date.
+              We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new policy on this page and updating the &quot;Last updated&quot; date.
             </Text>
           </View>
 
@@ -169,7 +194,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
     paddingBottom: 15,
     paddingHorizontal: 20,
     shadowColor: '#000',

@@ -25,7 +25,7 @@ export default function ScanResultScreen() {
           <Text style={styles.errorText}>Data hasil scan tidak ditemukan</Text>
           <TouchableOpacity 
             style={styles.button} 
-            onPress={() => router.navigate('/scan/camera')}
+            onPress={() => router.back()}
           >
             <Text style={styles.buttonText}>Kembali ke Camera</Text>
           </TouchableOpacity>
@@ -142,7 +142,7 @@ export default function ScanResultScreen() {
           
           <TouchableOpacity 
             style={[styles.actionButton, styles.primaryButton]} 
-            onPress={() => router.navigate('/scan/camera')}
+            onPress={() => router.back()}
           >
             <Text style={[styles.actionButtonText, styles.primaryButtonText]}>Scan Lagi</Text>
           </TouchableOpacity>

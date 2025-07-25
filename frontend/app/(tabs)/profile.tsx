@@ -4,12 +4,14 @@ import {
   Text, 
   ScrollView, 
   TouchableOpacity, 
-  Image
+  Image,
+  SafeAreaView,
+  Platform
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@/context/AuthContext';
 import { ProfileStyles } from '@/constants/ProfileStyles';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ScanService } from '@/services/scanService';
 
 interface UserStats {
@@ -35,18 +37,17 @@ interface ScannedScripture {
   description: string;
   submission_date: string;
   status: 'processing' | 'transliterating' | 'reviewing' | 'approved' | 'certified' | 'rejected';
-  thumbnailUrl?: string;
+  thumbnail_url?: string;
+  image_urls: string[];
   progress: number;
 }
+import { supabase } from '@/lib/supabase';
 
 export default function ProfileScreen() {
   const { user } = useAuth();
-  const [userStats, setUserStats] = useState<UserStats>({
-    totalChats: 0,
-    questionsAsked: 0,
-    imagesShared: 0,
-    joinDate: new Date().toLocaleDateString()
-  });
+
+  // State untuk profile Supabase
+  const [profile, setProfile] = useState<{ fullname?: string; username?: string; avatar_url?: string; updated_at?: string }>({});
 
   const [achievements, setAchievements] = useState<Achievement[]>([
     {
@@ -97,75 +98,48 @@ export default function ProfileScreen() {
   ]);
 
   const [scannedScriptures, setScannedScriptures] = useState<ScannedScripture[]>([]);
+  const [dummyCommitted, setDummyCommitted] = useState(false);
 
-  // Load scriptures from Supabase
-  const loadScriptures = useCallback(async () => {
-    if (user?.id) {
-      try {
-        const scriptures = await ScanService.getUserScriptures(user.id);
-        // Transform data to match local interface
-        const transformedScriptures: ScannedScripture[] = scriptures.map(s => ({
-          id: s.id,
-          title: s.title,
-          description: s.description,
-          submission_date: s.submission_date,
-          status: s.status,
-          thumbnailUrl: s.thumbnail_url,
-          progress: s.progress
-        }));
-        setScannedScriptures(transformedScriptures);
-        updateAchievements(transformedScriptures.length);
-      } catch (error) {
-        console.error('Error loading scriptures:', error);
-      }
+  // Fetch profile dan scannedScriptures dari Supabase
+  const fetchProfileAndScriptures = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      // Fetch profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('fullname, username, avatar_url, updated_at')
+        .eq('id', user.id)
+        .single();
+      setProfile(profileData || {});
+
+      // Fetch scannedScriptures
+      const scriptures = await ScanService.getUserScriptures(user.id);
+      // Transform data to match local interface
+      const transformedScriptures: ScannedScripture[] = scriptures.map(s => ({
+        id: s.id,
+        title: s.title,
+        description: s.description,
+        submission_date: s.submission_date,
+        status: s.status,
+        thumbnail_url: s.thumbnail_url,
+        image_urls: s.image_urls || [],
+        progress: s.progress
+      }));
+      setScannedScriptures(transformedScriptures);
+      updateAchievements(transformedScriptures.length);
+    } catch (error) {
+      console.error('Error fetching profile/scriptures:', error);
     }
   }, [user?.id]);
 
+  // Fetch data dari Supabase saat user login
   useEffect(() => {
-    if (user?.id) {
-      loadScriptures();
-      
-      // Subscribe to real-time updates
-      const subscription = ScanService.subscribeToScriptureUpdates(
-        user.id,
-        (updatedScriptures) => {
-          const transformedScriptures: ScannedScripture[] = updatedScriptures.map(s => ({
-            id: s.id,
-            title: s.title,
-            description: s.description,
-            submission_date: s.submission_date,
-            status: s.status,
-            thumbnailUrl: s.thumbnail_url,
-            progress: s.progress
-          }));
-          setScannedScriptures(transformedScriptures);
-          updateAchievements(transformedScriptures.length);
-        }
-      );
-
-      return () => {
-        subscription.unsubscribe();
-      };
-    }
-  }, [user?.id, loadScriptures]);
+    fetchProfileAndScriptures();
+  }, [fetchProfileAndScriptures]);
 
   const updateAchievements = (scriptureCount: number) => {
     setAchievements(prev => prev.map(achievement => {
-      if (achievement.id === '1') {
-        return {
-          ...achievement,
-          progress: Math.min(scriptureCount, achievement.requirement),
-          unlocked: scriptureCount >= achievement.requirement
-        };
-      }
-      if (achievement.id === '2') {
-        return {
-          ...achievement,
-          progress: Math.min(scriptureCount, achievement.requirement),
-          unlocked: scriptureCount >= achievement.requirement
-        };
-      }
-      if (achievement.id === '3') {
+      if (["1","2","3"].includes(achievement.id)) {
         return {
           ...achievement,
           progress: Math.min(scriptureCount, achievement.requirement),
@@ -176,25 +150,7 @@ export default function ProfileScreen() {
     }));
   };
 
-  useEffect(() => {
-    loadUserData();
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const stats = await AsyncStorage.getItem('user_stats');
-      if (stats) {
-        setUserStats(JSON.parse(stats));
-      }
-      
-      const achievementsData = await AsyncStorage.getItem('user_achievements');
-      if (achievementsData) {
-        setAchievements(JSON.parse(achievementsData));
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    }
-  };
+  // Hapus semua logic AsyncStorage dan dummy data
 
   const getProgressPercentage = (progress: number, requirement: number) => {
     return Math.min((progress / requirement) * 100, 100);
@@ -222,47 +178,47 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={ProfileStyles.container} showsVerticalScrollIndicator={false}>
-      {/* Header */}
-      <View style={ProfileStyles.header}>
-        <TouchableOpacity 
-          style={ProfileStyles.settingsButton}
-          onPress={() => router.push('/profile/settings')}
-        >
-          <Text style={ProfileStyles.settingsIcon}>⚙️</Text>
-        </TouchableOpacity>
-        
-        <View style={ProfileStyles.avatarContainer}>
-          <Image 
-            source={require('@/assets/images/kala-avatar-lg.png')} 
-            style={ProfileStyles.avatar}
-          />
+    <SafeAreaView style={[ProfileStyles.container, {paddingTop: Platform.OS === 'android' ? 32 : 0, paddingBottom: 24}]}> 
+      <ScrollView style={{flex: 1}} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={ProfileStyles.header}>
+          <TouchableOpacity 
+            style={ProfileStyles.settingsButton}
+            onPress={() => router.push('../profile/settings')}
+          >
+            <Text style={ProfileStyles.settingsIcon}>⚙️</Text>
+          </TouchableOpacity>
+          <View style={ProfileStyles.avatarContainer}>
+            <Image 
+              source={profile.avatar_url ? { uri: profile.avatar_url } : require('@/assets/images/kala-avatar-lg.png')} 
+              style={ProfileStyles.avatar}
+            />
+          </View>
+          <Text style={ProfileStyles.username}>{profile.fullname || 'Penjelajah Budaya'}</Text>
+          <Text style={ProfileStyles.joinDate}>{profile.username || '-'}</Text>
         </View>
-        <Text style={ProfileStyles.username}>Penjelajah Budaya</Text>
-        <Text style={ProfileStyles.joinDate}>Anggota sejak {userStats.joinDate}</Text>
-      </View>
 
-      {/* Achievements Section */}
-      <View style={ProfileStyles.section}>
-        <Text style={ProfileStyles.sectionTitle}>🏆 Pencapaian</Text>
-        
-        {achievements.slice(0, 3).map((achievement) => (
-          <View key={achievement.id} style={[
-            ProfileStyles.achievementCard,
-            achievement.unlocked && ProfileStyles.achievementUnlocked
-          ]}>
-            <View style={ProfileStyles.achievementLeft}>
-              <Text style={[
-                ProfileStyles.achievementIcon,
-                !achievement.unlocked && ProfileStyles.achievementIconLocked
-              ]}>
-                {achievement.icon}
-              </Text>
-              <View style={ProfileStyles.achievementInfo}>
+        {/* Achievements Section */}
+        <View style={ProfileStyles.section}>
+          <Text style={ProfileStyles.sectionTitle}>🏆 Pencapaian</Text>
+          
+          {achievements.slice(0, 3).map((achievement) => (
+            <View key={achievement.id} style={[
+              ProfileStyles.achievementCard,
+              achievement.unlocked && ProfileStyles.achievementUnlocked
+            ]}>
+              <View style={ProfileStyles.achievementLeft}>
                 <Text style={[
-                  ProfileStyles.achievementTitle,
-                  !achievement.unlocked && ProfileStyles.textMuted
+                  ProfileStyles.achievementIcon,
+                  !achievement.unlocked && ProfileStyles.achievementIconLocked
                 ]}>
+                  {achievement.icon}
+                </Text>
+                <View style={ProfileStyles.achievementInfo}>
+                  <Text style={[
+                    ProfileStyles.achievementTitle,
+                    !achievement.unlocked && ProfileStyles.textMuted
+                  ]}>
                   {achievement.title}
                 </Text>
                 <Text style={[
@@ -291,9 +247,6 @@ export default function ProfileScreen() {
             )}
           </View>
         ))}
-        
-
-        
         <TouchableOpacity 
           style={ProfileStyles.viewAllButton}
           onPress={() => router.push('/profile/achievements')}
@@ -305,7 +258,7 @@ export default function ProfileScreen() {
 
       {/* Scanned Scripture Section */}
       <View style={ProfileStyles.section}>
-        <Text style={ProfileStyles.sectionTitle}>📜 Naskah yang Difoto</Text>
+        <Text style={ProfileStyles.sectionTitle}>📜 Arsip yang Difoto</Text>
         
         {scannedScriptures.slice(0, 3).map((scripture) => {
           const statusInfo = getStatusDisplay(scripture.status);
@@ -314,21 +267,18 @@ export default function ProfileScreen() {
           const handleScripturePress = () => {
             if (isClickable) {
               // Navigate to library detail page with the scripture ID
-              router.push({
-                pathname: '/library/[id]',
-                params: { id: scripture.id }
-              });
+              router.push(`/(tabs)/library/${scripture.id}` as any);
             }
           };
 
           const ScriptureContent = (
             <View style={ProfileStyles.scriptureMainContent}>
-              {scripture.thumbnailUri && (
-                <Image 
-                  source={{ uri: scripture.thumbnailUri }} 
-                  style={ProfileStyles.scriptureThumbnail}
-                />
-              )}
+          {scripture.thumbnail_url && (
+            <Image 
+              source={{ uri: scripture.thumbnail_url }} 
+              style={ProfileStyles.scriptureThumbnail}
+            />
+          )}
               <View style={ProfileStyles.scriptureInfo}>
                 <View style={ProfileStyles.scriptureHeader}>
                   <Text style={ProfileStyles.scriptureTitle}>{scripture.title}</Text>
@@ -339,7 +289,7 @@ export default function ProfileScreen() {
                 
                 <Text style={ProfileStyles.scriptureDescription}>{scripture.description}</Text>
                 <Text style={ProfileStyles.scriptureDate}>
-                  Difoto pada {formatDate(scripture.submissionDate)}
+                  Difoto pada {formatDate(scripture.submission_date)}
                 </Text>
                 
                 {scripture.progress < 100 && (
@@ -392,7 +342,7 @@ export default function ProfileScreen() {
           style={ProfileStyles.viewAllButton}
           onPress={() => router.push('/profile/scriptures')}
         >
-          <Text style={ProfileStyles.viewAllText}>Lihat Semua Naskah</Text>
+          <Text style={ProfileStyles.viewAllText}>Lihat Semua Arsip</Text>
           <Text style={ProfileStyles.settingArrow}>›</Text>
         </TouchableOpacity>
       </View>
@@ -403,7 +353,7 @@ export default function ProfileScreen() {
         
         <TouchableOpacity 
           style={ProfileStyles.settingItem}
-          onPress={() => router.push('/profile/contact-support')}
+          onPress={() => router.push('../profile/contact-support')}
         >
           <Text style={ProfileStyles.settingText}>💌 Hubungi Dukungan</Text>
           <Text style={ProfileStyles.settingArrow}>›</Text>
@@ -414,5 +364,6 @@ export default function ProfileScreen() {
         </View>
       </View>
     </ScrollView>
-  );
+  </SafeAreaView>
+);
 }

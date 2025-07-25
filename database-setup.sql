@@ -5,7 +5,7 @@
 CREATE TABLE profiles (
   id UUID REFERENCES auth.users ON DELETE CASCADE PRIMARY KEY,
   username TEXT,
-  website TEXT,
+  fullname TEXT,
   avatar_url TEXT,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

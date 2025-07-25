@@ -1,17 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
   Image,
-  StyleSheet,
   Switch,
-  Alert
+  BackHandler,
+  StyleSheet
 } from 'react-native';
-import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
 
 export default function NotificationsScreen() {
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace && router.replace('/');
+        }
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(false);
   const [chatNotifications, setChatNotifications] = useState(true);
@@ -23,20 +39,28 @@ export default function NotificationsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Image
-            source={require('@/assets/images/backarrow-icon.png')}
-            style={styles.backIcon}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifikasi</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* Header with SafeAreaView for top only */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: '#472800' }}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack && router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace && router.replace('/');
+            }
+          }}
+          >
+            <Image
+              source={require('@/assets/images/backarrow-icon.png')}
+              style={styles.backIcon}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Notifikasi</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </SafeAreaView>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Push Notifications Section */}
@@ -72,8 +96,8 @@ export default function NotificationsScreen() {
 
           <View style={styles.settingItem}>
             <View style={styles.settingLeft}>
-              <Text style={styles.settingText}>Pembaruan Naskah</Text>
-              <Text style={styles.settingDescription}>Pembaruan untuk naskah yang Anda kirim</Text>
+              <Text style={styles.settingText}>Pembaruan Arsip</Text>
+              <Text style={styles.settingDescription}>Pembaruan untuk arsip budaya yang Anda kirim</Text>
             </View>
             <Switch
               value={scriptureUpdates}
@@ -198,7 +222,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
     paddingBottom: 15,
     paddingHorizontal: 20,
     shadowColor: '#000',

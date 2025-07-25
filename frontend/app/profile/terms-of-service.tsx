@@ -1,31 +1,56 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
   Image,
-  StyleSheet
+  StyleSheet,
+  BackHandler
 } from 'react-native';
-import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
 
 export default function TermsOfServiceScreen() {
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace && router.replace('/');
+        }
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Image
-            source={require('@/assets/images/backarrow-icon.png')}
-            style={styles.backIcon}
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Syarat dan Ketentuan</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {/* Header with SafeAreaView for top only */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: '#472800' }}>
+        <View style={styles.header}>
+          <TouchableOpacity 
+            style={styles.backButton}
+          onPress={() => {
+            if (router.canGoBack && router.canGoBack()) {
+              router.back();
+            } else {
+              router.replace && router.replace('/');
+            }
+          }}
+          >
+            <Image
+              source={require('@/assets/images/backarrow-icon.png')}
+              style={styles.backIcon}
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Syarat dan Ketentuan</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      </SafeAreaView>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
@@ -38,7 +63,7 @@ export default function TermsOfServiceScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Agreement to Terms</Text>
             <Text style={styles.paragraph}>
-              These Terms of Service ("Terms") govern your use of the Kala Cultural Heritage Assistant mobile application ("Service") operated by our team ("us," "we," or "our").
+              These Terms of Service (&quot;Terms&quot;) govern your use of the Kala Cultural Heritage Assistant mobile application (&quot;Service&quot;) operated by our team (&quot;us,&quot; &quot;we,&quot; or &quot;our&quot;).
             </Text>
             <Text style={styles.paragraph}>
               By accessing or using our Service, you agree to be bound by these Terms. If you disagree with any part of these terms, then you may not access the Service.
@@ -163,7 +188,7 @@ export default function TermsOfServiceScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Changes to Terms</Text>
             <Text style={styles.paragraph}>
-              We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days' notice prior to any new terms taking effect.
+              We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days, notice prior to any new terms taking effect.
             </Text>
           </View>
 
@@ -193,7 +218,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50,
     paddingBottom: 15,
     paddingHorizontal: 20,
     shadowColor: '#000',

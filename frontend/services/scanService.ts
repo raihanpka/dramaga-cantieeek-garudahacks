@@ -3,16 +3,13 @@ import { supabase, ScannedScripture, ScanResult } from '@/lib/supabase';
 
 export class ScanService {
   private static getApiUrl(): string {
-    const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
-    
-    if (Platform.OS === 'android') {
-      return baseUrl.replace('localhost', '10.0.2.2');
-    } else if (Platform.OS === 'ios') {
-      return baseUrl;
-    } else {
-      // For web or other platforms
-      return baseUrl;
-    }
+    const baseUrl = process.env.EXPO_PUBLIC_API_URL || 'https://api-kalanusa.vercel.app';
+    return Platform.select({
+      ios: baseUrl,
+      android: baseUrl,
+      web: baseUrl,
+      default: baseUrl,
+    });
   }
 
   /**
@@ -23,17 +20,30 @@ export class ScanService {
     
     for (let i = 0; i < images.length; i++) {
       const imageUri = images[i];
-      const fileName = `scans/${userId}/${Date.now()}_${i}.jpg`;
+      // Tentukan ekstensi file dari URI (default .jpg)
+      let extension = '.jpg';
+      if (imageUri.endsWith('.png')) {
+        extension = '.png';
+      } else if (imageUri.endsWith('.jpeg')) {
+        extension = '.jpeg';
+      }
+      const fileName = `scans/${userId}/${Date.now()}_${i}${extension}`;
       
       try {
         // Convert image URI to blob for upload
         const response = await fetch(imageUri);
         const blob = await response.blob();
         
+        // Determine content type based on file extension or blob type
+        let contentType = blob.type || 'image/jpeg';
+        if (imageUri.endsWith('.png')) {
+          contentType = 'image/png';
+        }
+
         const { error } = await supabase.storage
           .from('scripture-images')
           .upload(fileName, blob, {
-            contentType: 'image/jpeg',
+            contentType,
             upsert: false
           });
         

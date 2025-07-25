@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { 
   View, 
   Text, 
   ScrollView, 
   TouchableOpacity, 
   StyleSheet,
-  Image
+  Image,
+  BackHandler
 } from 'react-native';
-import { router } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { router, useFocusEffect } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { ProfileStyles } from '@/constants/ProfileStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -23,7 +25,7 @@ interface Achievement {
 }
 
 export default function AchievementsScreen() {
-  const [achievements, setAchievements] = useState<Achievement[]>([
+  const [achievements, setAchievements] = React.useState<Achievement[]>([
     {
       id: '1',
       title: 'First Chat',
@@ -116,6 +118,22 @@ export default function AchievementsScreen() {
     }
   ]);
 
+  // Handle Android hardware back button
+  useFocusEffect(
+    useCallback(() => {
+      const onBackPress = () => {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+          return true;
+        }
+        // Prevent error: do nothing if can't go back
+        return true;
+      };
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      return () => subscription.remove();
+    }, [])
+  );
+
   useEffect(() => {
     loadAchievements();
   }, []);
@@ -139,18 +157,24 @@ export default function AchievementsScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Image
-            source={require('@/assets/images/backarrow-icon.png')}
-            style={{ width: 24, height: 24, tintColor: 'white' }}
-            resizeMode="contain"
-          />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>All Achievements</Text>
-        <View style={styles.placeholder} />
-      </View>
+      {/* Header with SafeAreaView for top only */}
+      <SafeAreaView edges={["top"]} style={{ backgroundColor: Colors.light.tint }}>
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => {
+            if (router.canGoBack && router.canGoBack()) {
+              router.back();
+            }
+          }}>
+            <Image
+              source={require('@/assets/images/backarrow-icon.png')}
+              style={{ width: 24, height: 24, tintColor: 'white' }}
+              resizeMode="contain"
+            />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>All Achievements</Text>
+          <View style={styles.placeholder} />
+        </View>
+      </SafeAreaView>
 
       {/* Progress Summary */}
       <View style={styles.summaryCard}>
@@ -235,7 +259,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 15,
     paddingBottom: 15,
     paddingHorizontal: 20,
   },

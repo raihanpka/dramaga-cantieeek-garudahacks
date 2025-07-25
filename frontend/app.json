@@ -2,21 +2,31 @@
   "expo": {
     "name": "KalaNusa",
     "slug": "kalanusa",
+    "owner": "raihanpka",
     "version": "1.0.0",
+    "platforms": [
+      "android",
+      "ios"
+    ],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "kalanusa",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "extra": {
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "42c53222-c3cb-4231-b43c-6d535768abcc"
       }
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.garudahacks.kalanusa"
+      "bundleIdentifier": "com.garudahacks.kalanusa",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "package": "com.garudahacks.kalanusa",
@@ -26,12 +36,21 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "CAMERA",
-        "RECORD_AUDIO",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -74,6 +93,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "updates": {
+      "url": "https://u.expo.dev/42c53222-c3cb-4231-b43c-6d535768abcc"
     }
   }
 }
