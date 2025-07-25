@@ -1,17 +1,14 @@
 import { Agent } from "@mastra/core/agent";
 import { Memory } from "@mastra/memory";
-import { LibSQLStore, LibSQLVector } from "@mastra/libsql";
+import { LibSQLVector } from "@mastra/libsql";
 import { openai } from "@ai-sdk/openai";
 import { culturalSearchTool } from "../tools/culturalSearchTool.js";
 import { fastembed } from "@mastra/fastembed";
 
 // Optimized memory configuration for faster performance while keeping semantic recall
 const memory = new Memory({
-  storage: new LibSQLStore({
-    url: "file:./database/kala-chatbot.db", // Local database for chat history
-  }),
   vector: new LibSQLVector({
-    connectionUrl: process.env.TURSO_DB_URL || "file:vector-kala-chatbot.db",
+    connectionUrl: process.env.TURSO_DB_URL || "",
     authToken: process.env.TURSO_AUTH_TOKEN || ""
   }),
   embedder: fastembed,

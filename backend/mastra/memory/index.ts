@@ -1,10 +1,11 @@
 import { Memory } from "@mastra/memory";
-import { LibSQLStore } from "@mastra/libsql";
+import { LibSQLVector } from "@mastra/libsql";
 
 export const createMemory = () => {
   return new Memory({
-    storage: new LibSQLStore({
-      url: process.env.TURSO_DB_URL || "",
+    vector: new LibSQLVector({
+      connectionUrl: process.env.TURSO_DB_URL || "",
+      authToken: process.env.TURSO_AUTH_TOKEN || ""
     }),
     options: {
       threads: {
