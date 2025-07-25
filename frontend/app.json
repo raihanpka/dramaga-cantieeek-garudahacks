@@ -64,7 +64,8 @@
           "statusBarBackgroundColor": "#ffffff",
           "navigationBarStyle": "light"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

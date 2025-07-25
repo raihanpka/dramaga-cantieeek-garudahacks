@@ -5,13 +5,15 @@ import { Platform, Image } from 'react-native';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
   return (
-    <Tabs
-      screenOptions={{
+    <ProtectedRoute>
+      <Tabs
+        screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarInactiveTintColor: '#999',
         headerShown: false,
@@ -152,6 +154,7 @@ export default function TabLayout() {
           },
         })}
       />
-    </Tabs>
+      </Tabs>
+    </ProtectedRoute>
   );
 }

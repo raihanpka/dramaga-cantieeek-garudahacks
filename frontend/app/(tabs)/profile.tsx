@@ -4,12 +4,15 @@ import {
   Text, 
   ScrollView, 
   TouchableOpacity, 
-  Image
+  Image,
+  Alert
 } from 'react-native';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { ProfileStyles } from '@/constants/ProfileStyles';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth, useUser } from '@clerk/clerk-expo';
+import { SignOutButton } from '@/components/SignOutButton';
 
 interface UserStats {
   totalChats: number;
@@ -29,11 +32,14 @@ interface Achievement {
 }
 
 export default function ProfileScreen() {
+  const { signOut } = useAuth();
+  const { user } = useUser();
+  
   const [userStats, setUserStats] = useState<UserStats>({
     totalChats: 0,
     questionsAsked: 0,
     imagesShared: 0,
-    joinDate: new Date().toLocaleDateString()
+    joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : new Date().toLocaleDateString()
   });
 
   const [achievements, setAchievements] = useState<Achievement[]>([
@@ -118,7 +124,9 @@ export default function ProfileScreen() {
             style={ProfileStyles.avatar}
           />
         </View>
-        <Text style={ProfileStyles.username}>Nature Explorer</Text>
+        <Text style={ProfileStyles.username}>
+          {user?.fullName || user?.firstName || 'Nature Explorer'}
+        </Text>
         <Text style={ProfileStyles.joinDate}>Member since {userStats.joinDate}</Text>
       </View>
 
@@ -228,6 +236,34 @@ export default function ProfileScreen() {
         
         <TouchableOpacity style={ProfileStyles.settingItem}>
           <Text style={ProfileStyles.settingText}>📋 Terms of Service</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={ProfileStyles.settingItem}
+          onPress={async () => {
+            Alert.alert(
+              'Logout',
+              'Apakah Anda yakin ingin keluar?',
+              [
+                { text: 'Batal', style: 'cancel' },
+                { 
+                  text: 'Keluar', 
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await signOut();
+                      router.replace('/');
+                    } catch (error) {
+                      console.error('Error signing out:', error);
+                    }
+                  }
+                }
+              ]
+            );
+          }}
+        >
+          <Text style={[ProfileStyles.settingText, { color: '#FF3B30' }]}>🚪 Keluar</Text>
           <Text style={ProfileStyles.settingArrow}>›</Text>
         </TouchableOpacity>
         

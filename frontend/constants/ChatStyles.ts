@@ -62,12 +62,15 @@ export const ChatStyles = StyleSheet.create({
     maxWidth: '100%',
   },
   userMessageRow: {
+    justifyContent: 'flex-end',
     alignSelf: 'flex-end',
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     maxWidth: '85%',
   },
   aiMessageRow: {
+    justifyContent: 'flex-start',
     alignSelf: 'flex-start',
+    flexDirection: 'row',
     maxWidth: '85%',
   },
   avatar: {
@@ -101,16 +104,17 @@ export const ChatStyles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    maxWidth: '75%',
-    alignSelf: 'flex-start',
+    maxWidth: '100%',
   },
   userMessage: {
     backgroundColor: Colors.light.tint,
     borderBottomRightRadius: 4,
+    alignSelf: 'flex-end',
   },
   aiMessage: {
     backgroundColor: 'white',
     borderBottomLeftRadius: 4,
+    alignSelf: 'flex-start',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
