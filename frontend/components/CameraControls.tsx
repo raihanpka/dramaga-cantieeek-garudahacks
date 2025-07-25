@@ -56,6 +56,10 @@ export default function CameraControls({
         style={CameraStyles.finishButton} 
         onPress={photos.length > 0 ? onFinishTakingPhotos : onPickImages}
       >
+        <Image
+          source={require('@/assets/images/image-stack-icon.png')}
+          style={CameraStyles.importIcon}
+        />
         <Text style={CameraStyles.finishButtonText}>Import</Text>
       </TouchableOpacity>
     </View>

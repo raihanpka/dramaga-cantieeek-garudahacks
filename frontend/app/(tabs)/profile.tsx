@@ -28,6 +28,16 @@ interface Achievement {
   progress: number;
 }
 
+interface ScannedScripture {
+  id: string;
+  title: string;
+  description: string;
+  submissionDate: string;
+  status: 'processing' | 'transliterating' | 'reviewing' | 'approved' | 'certified' | 'rejected';
+  thumbnailUri?: string;
+  progress: number; // required field from 0 to 100
+}
+
 export default function ProfileScreen() {
   const [userStats, setUserStats] = useState<UserStats>({
     totalChats: 0,
@@ -84,6 +94,54 @@ export default function ProfileScreen() {
     }
   ]);
 
+  const [scannedScriptures, setScannedScriptures] = useState<ScannedScripture[]>([
+    {
+      id: '1',
+      title: 'Prasasti Candi Borobudur',
+      description: 'Photographed ancient stone inscription from Borobudur temple',
+      submissionDate: '2025-01-20',
+      status: 'certified',
+      progress: 100,
+      thumbnailUri: 'https://picsum.photos/seed/borobudur/200/150'
+    },
+    {
+      id: '2',
+      title: 'Naskah Lontar Bali',
+      description: 'Photographed traditional Balinese palm leaf manuscript',
+      submissionDate: '2025-01-22',
+      status: 'approved',
+      progress: 100,
+      thumbnailUri: 'https://picsum.photos/seed/lontar/200/150'
+    },
+    {
+      id: '3',
+      title: 'Batik Jawa Klasik',
+      description: 'Photographed traditional Javanese batik patterns with text',
+      submissionDate: '2025-01-24',
+      status: 'transliterating',
+      progress: 65,
+      thumbnailUri: 'https://picsum.photos/seed/batik/200/150'
+    },
+    {
+      id: '4',
+      title: 'Prasasti Sukuh',
+      description: 'Photographed stone inscription from Candi Sukuh',
+      submissionDate: '2025-01-25',
+      status: 'processing',
+      progress: 25,
+      thumbnailUri: 'https://picsum.photos/seed/sukuh/200/150'
+    },
+    {
+      id: '5',
+      title: 'Wayang Kulit Jawa',
+      description: 'Photographed traditional Javanese shadow puppet with inscriptions',
+      submissionDate: '2025-01-26',
+      status: 'reviewing',
+      progress: 80,
+      thumbnailUri: 'https://picsum.photos/seed/wayang/200/150'
+    }
+  ]);
+
   useEffect(() => {
     loadUserData();
   }, []);
@@ -108,6 +166,27 @@ export default function ProfileScreen() {
     return Math.min((progress / requirement) * 100, 100);
   };
 
+  const getStatusDisplay = (status: ScannedScripture['status']) => {
+    const statusConfig = {
+      processing: { label: 'Processing Photo', icon: '⏳', color: '#FF9500' },
+      transliterating: { label: 'Transliterating', icon: '🔤', color: '#007AFF' },
+      reviewing: { label: 'Expert Review', icon: '👁️', color: '#5856D6' },
+      approved: { label: 'Validated', icon: '✅', color: '#34C759' },
+      certified: { label: 'Certified', icon: '🏆', color: '#FFD700' },
+      rejected: { label: 'Rejected', icon: '❌', color: '#FF3B30' }
+    };
+    return statusConfig[status];
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('id-ID', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+  };
+
   return (
     <ScrollView style={ProfileStyles.container} showsVerticalScrollIndicator={false}>
       {/* Header */}
@@ -120,22 +199,6 @@ export default function ProfileScreen() {
         </View>
         <Text style={ProfileStyles.username}>Nature Explorer</Text>
         <Text style={ProfileStyles.joinDate}>Member since {userStats.joinDate}</Text>
-      </View>
-
-      {/* Stats Cards */}
-      <View style={ProfileStyles.statsContainer}>
-        <View style={ProfileStyles.statCard}>
-          <Text style={ProfileStyles.statNumber}>{userStats.totalChats}</Text>
-          <Text style={ProfileStyles.statLabel}>Conversations</Text>
-        </View>
-        <View style={ProfileStyles.statCard}>
-          <Text style={ProfileStyles.statNumber}>{userStats.questionsAsked}</Text>
-          <Text style={ProfileStyles.statLabel}>Questions</Text>
-        </View>
-        <View style={ProfileStyles.statCard}>
-          <Text style={ProfileStyles.statNumber}>{userStats.imagesShared}</Text>
-          <Text style={ProfileStyles.statLabel}>Images Shared</Text>
-        </View>
       </View>
 
       {/* Achievements Section */}
@@ -188,11 +251,74 @@ export default function ProfileScreen() {
           </View>
         ))}
         
+
+        
         <TouchableOpacity 
           style={ProfileStyles.viewAllButton}
           onPress={() => router.push('/profile/achievements')}
         >
           <Text style={ProfileStyles.viewAllText}>View All Achievements</Text>
+          <Text style={ProfileStyles.settingArrow}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Scanned Scripture Section */}
+      <View style={ProfileStyles.section}>
+        <Text style={ProfileStyles.sectionTitle}>📜 Photographed Scriptures</Text>
+        
+        {scannedScriptures.slice(0, 3).map((scripture) => {
+          const statusInfo = getStatusDisplay(scripture.status);
+          return (
+            <View key={scripture.id} style={ProfileStyles.scriptureCard}>
+              <View style={ProfileStyles.scriptureMainContent}>
+                {scripture.thumbnailUri && (
+                  <Image 
+                    source={{ uri: scripture.thumbnailUri }} 
+                    style={ProfileStyles.scriptureThumbnail}
+                  />
+                )}
+                <View style={ProfileStyles.scriptureInfo}>
+                  <View style={ProfileStyles.scriptureHeader}>
+                    <Text style={ProfileStyles.scriptureTitle}>{scripture.title}</Text>
+                    <View style={[ProfileStyles.statusBadge, { backgroundColor: statusInfo.color }]}>
+                      <Text style={ProfileStyles.statusText}>{statusInfo.label}</Text>
+                    </View>
+                  </View>
+                  
+                  <Text style={ProfileStyles.scriptureDescription}>{scripture.description}</Text>
+                  <Text style={ProfileStyles.scriptureDate}>
+                    Photographed on {formatDate(scripture.submissionDate)}
+                  </Text>
+                  
+                  {scripture.progress < 100 && (
+                    <View style={ProfileStyles.progressContainer}>
+                      <View style={ProfileStyles.progressBar}>
+                        <View 
+                          style={[
+                            ProfileStyles.progressFill, 
+                            { 
+                              width: `${scripture.progress}%`,
+                              backgroundColor: statusInfo.color 
+                            }
+                          ]} 
+                        />
+                      </View>
+                      <Text style={ProfileStyles.progressText}>
+                        {scripture.progress}% complete
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            </View>
+          );
+        })}
+        
+        <TouchableOpacity 
+          style={ProfileStyles.viewAllButton}
+          onPress={() => router.push('/profile/scriptures')}
+        >
+          <Text style={ProfileStyles.viewAllText}>View All Scriptures</Text>
           <Text style={ProfileStyles.settingArrow}>›</Text>
         </TouchableOpacity>
       </View>

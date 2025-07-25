@@ -121,10 +121,8 @@ export const GlobalStyles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 20,
     paddingVertical: 0,
-    height: 175,
-    backgroundColor: 'rgba(0, 0, 0, 1)',
-    borderRadius: 25,
-    marginHorizontal: 100,
+    height: 130,
+    backgroundColor: 'rgba(71, 40, 0, 1)',
     gap: 55, // Add gap between buttons instead of space-around
   },
   flipButton: {

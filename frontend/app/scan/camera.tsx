@@ -4,7 +4,10 @@ import {
   Text, 
   TouchableOpacity, 
   SafeAreaView,
-  Alert
+  Alert,
+  Modal,
+  ScrollView,
+  StyleSheet
 } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
@@ -25,6 +28,7 @@ export default function CameraScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
   const cameraRef = useRef<CameraView>(null);
 
   if (!permission) {
@@ -48,6 +52,14 @@ export default function CameraScreen() {
   function toggleCameraFacing() {
     setFacing((current: CameraType) => (current === 'back' ? 'front' : 'back'));
   }
+
+  const openInfoModal = () => {
+    setShowInfoModal(true);
+  };
+
+  const closeInfoModal = () => {
+    setShowInfoModal(false);
+  };
 
   const takePicture = async () => {
     if (cameraRef.current) {
@@ -220,16 +232,16 @@ export default function CameraScreen() {
       <Stack.Screen options={{ headerShown: false }} />
       <SafeAreaView style={GlobalStyles.darkContainer}>
         {/* Header with X button */}
-        <View style={[GlobalStyles.overlayHeader, { backgroundColor: '#000', opacity: 1 }]}>
+        <View style={[GlobalStyles.overlayHeader, { backgroundColor: '#472800', opacity: 1, height: 60 }]}>
           <TouchableOpacity 
             style={GlobalStyles.closeButton}
             onPress={() => router.navigate('/')}
           >
-            <Text style={GlobalStyles.closeButtonText}>✕</Text>
+            <Text style={[GlobalStyles.closeButtonText, { color: '#fff' }]}>✕</Text>
           </TouchableOpacity>
-          <Text style={GlobalStyles.headerTitle}>Camera</Text>
-          <TouchableOpacity style={GlobalStyles.closeButton} onPress={toggleCameraFacing}>
-            <Text style={GlobalStyles.closeButtonText}>🔄</Text>
+          <Text style={GlobalStyles.headerTitle}>NusaScan</Text>
+          <TouchableOpacity style={GlobalStyles.closeButton} onPress={openInfoModal}>
+            <Text style={GlobalStyles.closeButtonText}>ℹ</Text>
           </TouchableOpacity>
         </View>
 
@@ -248,7 +260,135 @@ export default function CameraScreen() {
             onPickImages={pickImages}
           />
         </View>
+
+        {/* Information Modal */}
+        <Modal
+          visible={showInfoModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={closeInfoModal}
+        >
+          <TouchableOpacity 
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={closeInfoModal}
+          >
+            <TouchableOpacity 
+              style={styles.modalContent}
+              activeOpacity={1}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Tentang NusaScan</Text>
+                <TouchableOpacity onPress={closeInfoModal}>
+                  <Text style={styles.closeModalButton}>✕</Text>
+                </TouchableOpacity>
+              </View>
+              
+              <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                <Text style={styles.modalText}>
+                  <Text style={styles.boldText}>NusaScan</Text> adalah fitur yang memungkinkan Anda berkontribusi dalam digitalisasi naskah dan prasasti bersejarah Indonesia.
+                </Text>
+                
+                <Text style={styles.sectionTitle}>🏛️ Apa itu Digitalisasi Naskah?</Text>
+                <Text style={styles.modalText}>
+                  Digitalisasi naskah adalah proses mengubah dokumen fisik bersejarah menjadi format digital agar dapat:
+                  {'\n'}• Dipelajari dan diakses oleh generasi mendatang
+                  {'\n'}• Dicari dan ditemukan dengan mudah
+                  {'\n'}• Dilindungi dari kerusakan waktu
+                  {'\n'}• Dibagikan kepada peneliti dan masyarakat
+                </Text>
+
+                <Text style={styles.sectionTitle}>📱 Cara Berkontribusi</Text>
+                <Text style={styles.modalText}>
+                  1. <Text style={styles.boldText}>Foto Naskah:</Text> Ambil foto naskah, prasasti, atau dokumen bersejarah dengan jelas
+                  {'\n'}2. <Text style={styles.boldText}>Berikan Informasi:</Text> Tambahkan judul dan deskripsi yang relevan
+                  {'\n'}3. <Text style={styles.boldText}>Kirim:</Text> Upload kontribusi Anda untuk diproses
+                </Text>
+
+                <Text style={styles.sectionTitle}>🎯 Tips Foto yang Baik</Text>
+                <Text style={styles.modalText}>
+                  • Pastikan pencahayaan cukup dan merata
+                  {'\n'}• Hindari bayangan yang menghalangi teks
+                  {'\n'}• Ambil foto dari berbagai sudut jika diperlukan
+                  {'\n'}• Fokus pada detail penting seperti teks atau simbol
+                </Text>
+
+                <Text style={styles.modalText}>
+                  <Text style={styles.boldText}>Terima kasih</Text> telah membantu melestarikan warisan budaya Indonesia! 🇮🇩
+                </Text>
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
       </SafeAreaView>
     </>
   );
 }
+
+const styles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 60,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    maxHeight: '100%',
+    width: '100%',
+    maxWidth: 320,
+    alignSelf: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  closeModalButton: {
+    fontSize: 20,
+    color: '#999',
+    padding: 4,
+  },
+  modalBody: {
+    padding: 16,
+    paddingBottom: 20,
+    maxHeight: 400,
+  },
+  modalText: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  boldText: {
+    fontWeight: 'bold',
+    color: '#8B4513',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#472800',
+    marginTop: 8,
+    marginBottom: 8,
+  },
+});

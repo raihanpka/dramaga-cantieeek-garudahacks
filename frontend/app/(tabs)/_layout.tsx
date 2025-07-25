@@ -15,8 +15,6 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         tabBarInactiveTintColor: '#999',
         headerShown: false,
-        // ⚠️ Removed the buggy HapticTab
-        // tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
         tabBarShowLabel: false,
         tabBarStyle: Platform.select({
