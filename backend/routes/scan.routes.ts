@@ -50,6 +50,22 @@ router.get("/supported-types", (req, res) => {
   });
 });
 
-// Streaming endpoint is disabled for Vercel. All uploads must be handled via Supabase Storage from the frontend.
+
+// Analisis gambar dari Supabase Storage public URL
+router.post("/", async (req, res) => {
+  try {
+    const { imageUrl } = req.body;
+    if (!imageUrl || typeof imageUrl !== "string") {
+      return res.status(400).json({ success: false, message: "imageUrl is required" });
+    }
+    // Jalankan analisis
+    const result = await analyzeImage(imageUrl);
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    console.error("/scan error:", error);
+    const errorMessage = (error instanceof Error) ? error.message : String(error);
+    return res.status(500).json({ success: false, message: "Failed to analyze image", error: errorMessage });
+  }
+});
 
 export default router;

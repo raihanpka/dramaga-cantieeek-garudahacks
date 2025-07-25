@@ -21,6 +21,9 @@
     "production": {
       "android": {
         "buildType": "apk"
+      },
+      "web": {
+        "output": "static"
       }
     }
   },

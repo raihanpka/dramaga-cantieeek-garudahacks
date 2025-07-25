@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 import { supabase, ScannedScripture, ScanResult } from '@/lib/supabase';
 
 export class ScanService {
@@ -17,52 +18,81 @@ export class ScanService {
    */
   static async uploadImages(images: string[], userId: string): Promise<string[]> {
     const uploadedUrls: string[] = [];
-    
     for (let i = 0; i < images.length; i++) {
       const imageUri = images[i];
-      // Tentukan ekstensi file dari URI (default .jpg)
+      console.log('Uploading imageUri:', imageUri);
       let extension = '.jpg';
-      if (imageUri.endsWith('.png')) {
-        extension = '.png';
-      } else if (imageUri.endsWith('.jpeg')) {
-        extension = '.jpeg';
-      }
-      const fileName = `scans/${userId}/${Date.now()}_${i}${extension}`;
-      
+      if (imageUri.endsWith('.png')) extension = '.png';
+      else if (imageUri.endsWith('.jpeg')) extension = '.jpeg';
+      const fileName = `${userId}/${Date.now()}_${i}${extension}`;
       try {
-        // Convert image URI to blob for upload
-        const response = await fetch(imageUri);
-        const blob = await response.blob();
-        
-        // Determine content type based on file extension or blob type
-        let contentType = blob.type || 'image/jpeg';
-        if (imageUri.endsWith('.png')) {
-          contentType = 'image/png';
+        let fileBuffer: Uint8Array | null = null;
+        let contentType = extension === '.png' ? 'image/png' : 'image/jpeg';
+        if (imageUri.startsWith('file://')) {
+          // Read file as binary for upload
+          const fileInfo = await FileSystem.getInfoAsync(imageUri);
+          if (!fileInfo.exists) {
+            console.error('File does not exist:', imageUri);
+            continue;
+          }
+          const fileData = await FileSystem.readAsStringAsync(imageUri, { encoding: FileSystem.EncodingType.Base64 });
+          fileBuffer = Uint8Array.from(atob(fileData), c => c.charCodeAt(0));
+        } else if (imageUri.startsWith('http://') || imageUri.startsWith('https://')) {
+          // Fallback to fetch for remote images
+          let response: Response;
+          try {
+            response = await fetch(imageUri);
+          } catch (fetchErr) {
+            console.error('Fetch imageUri failed:', imageUri, fetchErr);
+            continue;
+          }
+          if (!response || !response.ok) {
+            console.error('Fetch response not ok for:', imageUri, response?.status);
+            continue;
+          }
+          try {
+            const blob = await response.blob();
+            fileBuffer = new Uint8Array(await blob.arrayBuffer());
+          } catch (blobErr) {
+            console.error('Failed to convert to blob:', imageUri, blobErr);
+            continue;
+          }
+        } else {
+          console.error('Unsupported URI scheme:', imageUri);
+          continue;
         }
-
-        const { error } = await supabase.storage
+        if (!fileBuffer) {
+          console.error('No file buffer for:', imageUri);
+          continue;
+        }
+        const { data, error } = await supabase.storage
           .from('scripture-images')
-          .upload(fileName, blob, {
+          .upload(fileName, fileBuffer, {
             contentType,
             upsert: false
           });
-        
         if (error) {
-          console.error('Upload error:', error);
+          console.error('Upload error:', error.message || error, fileName);
           continue;
         }
-        
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
+        const { data: publicUrlData } = supabase.storage
           .from('scripture-images')
           .getPublicUrl(fileName);
-        
+        if (!publicUrlData?.publicUrl) {
+          console.error('Failed to get public URL for:', fileName);
+          continue;
+        }
+        // Pastikan URL HTTPS
+        let publicUrl = publicUrlData.publicUrl;
+        if (publicUrl.startsWith('http://')) {
+          publicUrl = publicUrl.replace('http://', 'https://');
+        }
+        console.log('Public image URL:', publicUrl);
         uploadedUrls.push(publicUrl);
       } catch (error) {
-        console.error('Error uploading image:', error);
+        console.error('Error uploading image:', error, imageUri);
       }
     }
-    
     return uploadedUrls;
   }
 
@@ -128,20 +158,17 @@ export class ScanService {
       
       // Process the first image for now (you can extend this to process all images)
       const imageUrl = imageUrls[0];
-      
+      console.log('Background analysis using imageUrl:', imageUrl);
       // Convert image URL to FormData
       const response = await fetch(imageUrl);
       const blob = await response.blob();
-      
       const formData = new FormData();
       formData.append('image', blob, 'image.jpg');
-      
       // Call scan API
       const scanResponse = await fetch(`${this.getApiUrl()}/api/scan`, {
         method: 'POST',
         body: formData,
       });
-      
       const result: ScanResult = await scanResponse.json();
       
       if (result.success) {
